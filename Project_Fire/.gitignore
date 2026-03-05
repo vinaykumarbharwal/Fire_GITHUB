@@ -1,0 +1,33 @@
+# Flutter
+.dart_tool/
+.flutter-plugins
+.flutter-plugins-dependencies
+.pub-cache/
+.pub/
+/build/
+
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+.venv/
+venv/
+ENV/
+env/
+.env
+.env.*
+firebase-credentials.json
+
+# IDEs
+.idea/
+.vscode/
+*.iml
+
+# Node/Frontend
+node_modules/
+dist/
+.next/
+
+# OS
+.DS_Store
+Thumbs.db
