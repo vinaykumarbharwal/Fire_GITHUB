@@ -57,19 +57,28 @@ async def report_detection(
         # Define image path for Supabase
         image_path = f"detections/{detection_id}.{image_extension}"
         
-        # Save temporarily and upload to Supabase
+        # Save image temporarily
         temp_file = f"/tmp/{detection_id}.{image_extension}"
-        # Ensure tmp directory exists
-        os.makedirs("/tmp", exist_ok=True)
+        # Ensure tmp directory exists (use Windows-compatible temp path)
+        import tempfile
+        temp_dir = tempfile.gettempdir()
+        temp_file = os.path.join(temp_dir, f"{detection_id}.{image_extension}")
         
         with open(temp_file, "wb") as buffer:
             shutil.copyfileobj(image.file, buffer)
         
-        # Upload to Supabase instead of Firebase
-        image_url = await supabase_service.upload_image(temp_file, image_path)
-        
-        # Clean up temp file
-        os.remove(temp_file)
+        # Try to upload to Supabase (optional — detection still saves if this fails)
+        image_url = None
+        try:
+            image_url = await supabase_service.upload_image(temp_file, image_path)
+        except Exception as upload_err:
+            print(f"⚠️ Image upload skipped (Supabase error): {upload_err}")
+        finally:
+            # Always clean up temp file
+            try:
+                os.remove(temp_file)
+            except Exception:
+                pass
         
         # Get location details
         location_details = await get_location_details(latitude, longitude)
