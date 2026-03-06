@@ -60,16 +60,36 @@ class _CameraScreenState extends State<CameraScreen> with WidgetsBindingObserver
       final detectionService = Provider.of<DetectionService>(context, listen: false);
       final apiService = Provider.of<ApiService>(context, listen: false);
       
+      // Step 1: Run AI inference (sent to /api/inference/detect)
       var result = await detectionService.detectFire(image, apiService);
       
       if (!mounted) return;
       
       if (result['detected'] == true) {
+        final double confidence = (result['confidence'] ?? 0.0).toDouble();
+        final String severity = result['severity'] ?? _calculateSeverity(confidence);
+
         setState(() {
           _fireDetected = true;
-          _confidence = result['confidence'] ?? 0.0;
-          _severity = result['severity'] ?? _calculateSeverity(_confidence);
+          _confidence = confidence;
+          _severity = severity;
         });
+
+        // Step 2: Report fire to backend → saves to Firestore, uploads image, sends alerts
+        try {
+          await apiService.reportDetection(
+            detection: {
+              'confidence': confidence,
+              'severity': severity,
+              'timestamp': DateTime.now().toIso8601String(),
+            },
+            imageFile: File(image.path),
+          );
+          print('✅ Fire detection reported to backend');
+        } catch (reportError) {
+          print('⚠️ Fire detected but failed to report: $reportError');
+          // Still show the alert even if reporting fails
+        }
         
         _showFireAlert(result);
       } else {
