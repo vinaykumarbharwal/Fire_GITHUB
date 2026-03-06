@@ -53,6 +53,46 @@ async def health_check():
         "storage": "connected"
     }
 
+@app.get("/api/stats")
+async def get_stats():
+    """Dashboard statistics: total, active, and resolved detections"""
+    try:
+        from api.services.firebase_service import db
+        all_docs = db.collection('detections').stream()
+        total = 0
+        active = 0
+        resolved = 0
+        critical = 0
+        for doc in all_docs:
+            data = doc.to_dict()
+            total += 1
+            status = data.get('status', 'pending')
+            severity = data.get('severity', 'low')
+            if status in ('pending', 'verified'):
+                active += 1
+            elif status == 'resolved':
+                resolved += 1
+            if severity == 'critical':
+                critical += 1
+        return {
+            "total_detections": total,
+            "active_fires": active,
+            "resolved_fires": resolved,
+            "critical_fires": critical,
+            "timestamp": datetime.now().isoformat()
+        }
+    except Exception as e:
+        logger.error(f"Stats error: {e}")
+        return {
+            "total_detections": 0,
+            "active_fires": 0,
+            "resolved_fires": 0,
+            "critical_fires": 0,
+            "timestamp": datetime.now().isoformat(),
+            "error": str(e)
+        }
+
+
 @app.exception_handler(Exception)
 async def global_exception_handler(request, exc):
     logger.error(f"Global error: {exc}")

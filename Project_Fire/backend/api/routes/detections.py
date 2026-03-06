@@ -1,4 +1,5 @@
 from fastapi import APIRouter, HTTPException, Depends, UploadFile, File, Form, Query
+from fastapi.security import HTTPBearer, HTTPAuthorizationCredentials
 from typing import Optional, List
 from datetime import datetime, timedelta
 import uuid
@@ -12,6 +13,16 @@ from api.services.geocoding_service import get_location_details, find_nearby_sta
 from api.routes.auth import get_current_user
 from api.models.detection import DetectionResponse, DetectionUpdate, DetectionCreate
 
+async def get_optional_user(credentials: Optional[HTTPAuthorizationCredentials] = Depends(HTTPBearer(auto_error=False))):
+    """Optional auth: returns user if token provided, else returns None"""
+    if credentials is None:
+        return None
+    try:
+        from api.routes.auth import get_current_user_from_token
+        return await get_current_user_from_token(credentials.credentials)
+    except Exception:
+        return None
+
 router = APIRouter()
 notification_service = NotificationService()
 
@@ -24,7 +35,7 @@ async def report_detection(
     confidence: float = Form(...),
     image: UploadFile = File(...),
     reported_by: Optional[str] = Form(None),
-    current_user: dict = Depends(get_current_user)
+    current_user: Optional[dict] = Depends(get_optional_user)
 ):
     """
     Report a new fire detection from mobile app
@@ -88,8 +99,8 @@ async def report_detection(
             'confidence': confidence,
             'image_url': image_url,
             'timestamp': datetime.now(),
-            'reported_by': reported_by or current_user.get('uid'),
-            'reporter_name': current_user.get('name'),
+            'reported_by': reported_by or (current_user.get('uid') if current_user else 'anonymous'),
+            'reporter_name': (current_user.get('name') if current_user else 'Anonymous'),
             'status': 'pending',
             'severity': severity,
             'nearby_stations': nearby_stations[:5],  # Top 5 nearest
