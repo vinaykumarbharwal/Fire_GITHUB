@@ -1,8 +1,11 @@
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import JSONResponse
+from fastapi.staticfiles import StaticFiles
+from fastapi.openapi.docs import get_swagger_ui_html, get_redoc_html
 from datetime import datetime
 import logging
+import os
 
 from api.routes import detections, auth, notifications, inference
 from api.config.settings import settings
@@ -16,9 +19,33 @@ app = FastAPI(
     title="Wildfire Detection API",
     description="Real-time wildfire detection system API",
     version="1.0.0",
-    docs_url="/api/docs",
-    redoc_url="/api/redoc"
+    docs_url=None,
+    redoc_url=None
 )
+
+# Mount static files
+static_path = os.path.join(os.path.dirname(__file__), "static")
+app.mount("/api/static", StaticFiles(directory=static_path), name="static")
+
+# Custom Swagger UI route
+@app.get("/api/docs", include_in_schema=False)
+async def custom_swagger_ui_html():
+    return get_swagger_ui_html(
+        openapi_url=app.openapi_url,
+        title=app.title + " - Swagger UI",
+        oauth2_redirect_url=app.swagger_ui_oauth2_redirect_url,
+        swagger_js_url="/api/static/swagger-ui-bundle.js",
+        swagger_css_url="/api/static/swagger-ui.css",
+    )
+
+# Custom ReDoc route
+@app.get("/api/redoc", include_in_schema=False)
+async def redoc_html():
+    return get_redoc_html(
+        openapi_url=app.openapi_url,
+        title=app.title + " - ReDoc",
+        redoc_js_url="/api/static/redoc.standalone.js",
+    )
 
 # Configure CORS
 app.add_middleware(
