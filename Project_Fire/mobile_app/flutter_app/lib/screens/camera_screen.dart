@@ -10,6 +10,7 @@ import '../services/api_service.dart';
 const Color kPrimaryColor = Color(0xFFF48C25);
 const Color kBackgroundLight = Color(0xFFF8F7F5);
 const Color kBackgroundDark = Color(0xFF221910);
+const Color kTextDark = Color(0xFF1A1A2E);
 const Color kSuccessGreen = Color(0xFF22C55E);
 const Color kAlertRed = Color(0xFFEF4444);
 const Color kEmergencyRed = Color(0xFFDC2626);
@@ -371,7 +372,7 @@ class _CameraScreenState extends State<CameraScreen> with WidgetsBindingObserver
                 border: Border.all(color: kPrimaryColor, width: 2),
                 borderRadius: BorderRadius.circular(12),
                 boxShadow: [
-                  BoxShadow(color: kPrimaryColor.withOpacity(0.1), blurRadius: 20, inset: true),
+                  BoxShadow(color: kPrimaryColor.withOpacity(0.1), blurRadius: 20),
                   BoxShadow(color: kPrimaryColor.withOpacity(0.1), blurRadius: 10),
                 ],
               ),
