@@ -302,18 +302,22 @@
         }
     }
 
+    function sanitizeDetection(d) {
+        return {
+            ...d,
+            image_url: (d.image_url && d.image_url.includes('placeholder.jpg'))
+                ? 'https://raw.githubusercontent.com/vinaykumarbharwal/Fire_GITHUB/main/Project_Fire/mobile_app/flutter_app/assets/images/placeholder_fire.jpg'
+                : d.image_url
+        };
+    }
+
     async function loadDetections() {
         try {
             const response = await fetch(`${API_BASE_URL}/detections?limit=50`);
             const rawDetections = await response.json();
 
             // Sanitize detections to handle legacy/missing assets
-            detections = rawDetections.map(d => ({
-                ...d,
-                image_url: (d.image_url && d.image_url.includes('placeholder.jpg'))
-                    ? 'https://raw.githubusercontent.com/vinaykumarbharwal/Fire_GITHUB/main/Project_Fire/mobile_app/flutter_app/assets/images/placeholder_fire.jpg'
-                    : d.image_url
-            }));
+            detections = rawDetections.map(sanitizeDetection);
 
             updateDetectionsGrid(detections);
             updateIncidentTable(detections);
@@ -613,10 +617,10 @@
             .onSnapshot((snapshot) => {
                 snapshot.docChanges().forEach((change) => {
                     if (change.type === 'added') {
-                        const detection = {
+                        const detection = sanitizeDetection({
                             id: change.doc.id,
                             ...change.doc.data()
-                        };
+                        });
 
                         // Add to list
                         detections.unshift(detection);
@@ -640,10 +644,10 @@
                         // Update detection in list
                         const index = detections.findIndex(d => d.id === change.doc.id);
                         if (index !== -1) {
-                            detections[index] = {
+                            detections[index] = sanitizeDetection({
                                 id: change.doc.id,
                                 ...change.doc.data()
-                            };
+                            });
                             filterDetections();
                         }
                     }
