@@ -121,7 +121,7 @@ class NotificationService:
                     'longitude': str(detection['longitude']),
                     'severity': detection['severity'],
                     'confidence': str(detection['confidence']),
-                    'image_url': detection['image_url'],
+                    'image_url': str(detection.get('image_url') or ''),
                     'timestamp': detection['timestamp'].isoformat() if isinstance(detection['timestamp'], datetime) else str(detection['timestamp']),
                     'click_action': 'OPEN_DETECTION'
                 },
@@ -174,6 +174,7 @@ class NotificationService:
     def _format_sms_message(self, detection: Dict, verified: bool = False) -> str:
         """Format SMS alert message"""
         prefix = "🚨 VERIFIED " if verified else "🔥 "
+        image_str = f"🖼️ Image: {detection['image_url']}" if detection.get('image_url') else "🖼️ Image: No image available"
         
         lines = [
             f"{prefix}WILDFIRE DETECTED!",
@@ -183,7 +184,7 @@ class NotificationService:
             f"Time: {detection['timestamp'].strftime('%H:%M %d/%m/%Y')}",
             "",
             f"📍 Map: https://maps.google.com/?q={detection['latitude']},{detection['longitude']}",
-            f"🖼️ Image: {detection['image_url']}",
+            image_str,
             "",
             "🚒 Fire department has been notified."
         ]
@@ -192,6 +193,7 @@ class NotificationService:
     
     def _format_text_email(self, detection: Dict) -> str:
         """Format plain text email"""
+        image_str = f"Detection Image: {detection['image_url']}" if detection.get('image_url') else "Detection Image: Not available"
         lines = [
             "WILDFIRE DETECTION ALERT",
             "=" * 40,
@@ -209,7 +211,7 @@ class NotificationService:
             "",
             "LINKS:",
             f"Google Maps: https://maps.google.com/?q={detection['latitude']},{detection['longitude']}",
-            f"Detection Image: {detection['image_url']}",
+            image_str,
             "",
             "=" * 40,
             "This is an automated alert from the Wildfire Detection System"
@@ -275,12 +277,10 @@ class NotificationService:
                     
                     <div style="text-align: center; margin: 20px 0;">
                         <a href="https://maps.google.com/?q={detection['latitude']},{detection['longitude']}" class="button">📍 View on Map</a>
-                        <a href="{detection['image_url']}" class="button">🖼️ View Image</a>
+                        {f'<a href="{detection["image_url"]}" class="button">🖼️ View Image</a>' if detection.get("image_url") else ""}
                     </div>
                     
-                    <div style="text-align: center;">
-                        <img src="{detection['image_url']}" alt="Fire detection" style="max-width: 100%; border-radius: 5px;">
-                    </div>
+                    {f'<div style="text-align: center;"><img src="{detection["image_url"]}" alt="Fire detection" style="max-width: 100%; border-radius: 5px;"></div>' if detection.get("image_url") else '<div style="text-align: center; color: #666; font-style: italic;">No image available for this report</div>'}
                 </div>
                 
                 <div class="footer">

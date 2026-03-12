@@ -11,7 +11,7 @@ class DetectionResponse(BaseModel):
     state: Optional[str] = None
     country: Optional[str] = None
     confidence: float
-    image_url: str
+    image_url: Optional[str] = None
     timestamp: datetime
     reported_by: Optional[str] = None
     status: str

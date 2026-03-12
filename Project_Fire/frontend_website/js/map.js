@@ -80,10 +80,12 @@ const MapController = {
                 <p><strong>Confidence:</strong> ${Math.round(detection.confidence * 100)}%</p>
                 <p><strong>Time:</strong> ${new Date(detection.timestamp).toLocaleString()}</p>
                 <p><strong>Status:</strong> ${detection.status}</p>
-                <img src="${detection.image_url}" style="width: 100%; max-height: 150px; object-fit: cover; border-radius: 5px; margin-top: 10px;">
+                <img src="${detection.image_url || 'https://via.placeholder.com/400x225?text=No+Image+Available'}" 
+                     style="width: 100%; max-height: 150px; object-fit: cover; border-radius: 5px; margin-top: 10px;"
+                     onerror="this.src='https://via.placeholder.com/400x225?text=No+Image+Available'">
                 <div style="display: flex; gap: 5px; margin-top: 10px;">
                     <a href="https://maps.google.com/?q=${detection.latitude},${detection.longitude}" target="_blank" style="flex: 1; text-align: center; padding: 5px; background: #007bff; color: white; text-decoration: none; border-radius: 3px;">📍 Map</a>
-                    <a href="${detection.image_url}" target="_blank" style="flex: 1; text-align: center; padding: 5px; background: #28a745; color: white; text-decoration: none; border-radius: 3px;">🖼️ Image</a>
+                    <a href="${detection.image_url || '#'}" target="_blank" style="flex: 1; text-align: center; padding: 5px; background: #28a745; color: white; text-decoration: none; border-radius: 3px;">🖼️ Image</a>
                 </div>
             </div>
         `);

@@ -366,12 +366,13 @@
         const severity = detection.severity || 'unknown';
         const timeAgo = getTimeAgo(detection.timestamp);
         const severityClass = `severity-${severity.toLowerCase()}`;
+        const imageUrl = detection.image_url || 'https://raw.githubusercontent.com/vinaykumarbharwal/Fire_GITHUB/main/Project_Fire/mobile_app/flutter_app/assets/images/placeholder_fire.jpg';
 
         return `
         <div class="detection-card group cursor-pointer" data-id="${detection.id}" onclick="showDetectionDetails('${detection.id}')">
             <div class="relative overflow-hidden aspect-video rounded-2xl mb-2">
-                <img src="${detection.image_url}" alt="Fire detection" class="w-full h-full object-cover transition-transform duration-700 group-hover:scale-110" 
-                     onerror="this.src='assets/images/placeholder.jpg'">
+                <img src="${imageUrl}" alt="Fire detection" class="w-full h-full object-cover transition-transform duration-700 group-hover:scale-110" 
+                     onerror="this.src='https://via.placeholder.com/400x225?text=No+Image+Available'">
                 <div class="absolute top-4 left-4 z-10">
                     <span class="severity-badge ${severityClass}">
                         ${severity.toUpperCase()}
@@ -412,6 +413,10 @@
     `;
     }
 
+    // Expose handlers to window for onclick support
+    window.viewOnMap = viewOnMap;
+    window.showDetectionDetails = showDetectionDetails;
+
     function filterDetections() {
         if (!detections.length) return;
 
@@ -444,11 +449,12 @@
 
         const modal = document.createElement('div');
         modal.className = 'fixed inset-0 z-[100] flex items-center justify-center p-4 bg-slate-900/60 backdrop-blur-md animate-fade-in';
+        const imageUrl = detection.image_url || 'https://raw.githubusercontent.com/vinaykumarbharwal/Fire_GITHUB/main/Project_Fire/mobile_app/flutter_app/assets/images/placeholder_fire.jpg';
 
         modal.innerHTML = `
         <div class="bg-white w-full max-w-2xl rounded-[2.5rem] overflow-hidden shadow-2xl border border-white/20 animate-scale-up">
             <div class="relative h-64 overflow-hidden">
-                <img src="${detection.image_url}" alt="Detection" class="w-full h-full object-cover">
+                <img src="${imageUrl}" alt="Detection" class="w-full h-full object-cover">
                 <div class="absolute inset-0 bg-gradient-to-t from-slate-900/80 via-transparent to-transparent"></div>
                 <button class="absolute top-6 right-6 w-10 h-10 bg-white/20 backdrop-blur-md hover:bg-white/40 text-white rounded-full flex items-center justify-center transition-all" onclick="this.closest('.fixed').remove()">
                     <span class="material-symbols-outlined">close</span>
