@@ -67,18 +67,23 @@ class OnnxInferenceService:
             input_tensor = self.preprocess(image_bytes)
             outputs = self.session.run(self.output_names, {self.input_name: input_tensor})
             
-            # Simple post-processing (adjust this based on your specific YOLO/Detection output)
-            # This is a generic example - output[0] usually contains boxes + confs
-            result = outputs[0]
+            # Parsing [1, 300, 6] output
+            # Assuming format: [batch, num_boxes, [x, y, w, h, confidence, class_id]]
+            predictions = outputs[0][0] # shape: (300, 6)
             
-            # TODO: Implement NMS and proper box extraction based on your model's specific architecture
-            # For now, return the raw prediction summary or a simulated detection if confidence is high
+            # Find the best prediction (highest confidence)
+            best_idx = np.argmax(predictions[:, 4])
+            best_pred = predictions[best_idx]
+            
+            confidence = float(best_pred[4])
+            detected = confidence > 0.4 # Threshold
+            
             return {
-                "detected": True, # Placeholder
-                "confidence": 0.92, # Placeholder
-                "label": "fire",
-                "boxes": [[50, 50, 150, 150]],
-                "raw_output_shape": list(result.shape)
+                "detected": detected,
+                "confidence": round(confidence, 4),
+                "label": "fire" if detected else "none",
+                "boxes": [best_pred[0:4].tolist()],
+                "raw_output_shape": list(outputs[0].shape)
             }
         except Exception as e:
             logger.error(f"Inference error: {e}")
