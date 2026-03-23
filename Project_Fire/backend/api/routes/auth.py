@@ -5,7 +5,6 @@ from datetime import datetime, timedelta
 from typing import Optional
 import jwt
 from passlib.context import CryptContext
-import os
 from dotenv import load_dotenv
 
 from api.services.firebase_service import db, auth_client
@@ -78,7 +77,7 @@ async def get_current_user_from_token(token: str):
         email: str = payload.get("sub")
         user_id: str = payload.get("user_id")
         
-        if user_id is None:
+        if user_id is None or email is None:
             raise credentials_exception
             
         # Get user from Firebase

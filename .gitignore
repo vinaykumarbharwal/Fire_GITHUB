@@ -1,33 +1,84 @@
-# Flutter
+# =========================
+# Python / FastAPI Backend
+# =========================
+# Virtual environments
+env/
+venv/
+ENV/
+env.bak/
+venv.bak/
+.venv/
+env_fire/
+
+# Byte-compiled / optimized / DLL files
+__pycache__/
+*.py[cod]
+*$py.class
+
+# Pytest & Coverage
+.pytest_cache/
+.coverage
+htmlcov/
+*.log
+
+# Type checkers
+.mypy_cache/
+.pyre/
+
+# Packaging & Distribution
+build/
+dist/
+*.egg-info/
+
+# =========================
+# Secrets & Credentials
+# =========================
+.env
+.env.local
+.env.development
+.env.test
+.env.production
+firebase-credentials.json
+*.pem
+
+# (Note: Keep .env.example tracked by NOT adding it here)
+
+# =========================
+# Node / Frontend 
+# =========================
+node_modules/
+.npm/
+
+# =========================
+# Flutter / Mobile App
+# =========================
 .dart_tool/
 .flutter-plugins
 .flutter-plugins-dependencies
 .pub-cache/
 .pub/
-/build/
 
-# Python
-__pycache__/
-*.py[cod]
-*$py.class
-.venv/
-venv/
-ENV/
-env/
-.env
-.env.*
-firebase-credentials.json
-
-# IDEs
-.idea/
+# =========================
+# IDEs & Editors
+# =========================
 .vscode/
+.idea/
+*.swp
 *.iml
+*.suo
+*.ntvs*
+*.njsproj
+*.sln
 
-# Node/Frontend
-node_modules/
-dist/
-.next/
-
-# OS
+# =========================
+# OS / System Files
+# =========================
 .DS_Store
-Thumbs.db
+.DS_Store?
+._*
+.Spotlight-V100
+.Trashes
+ehthumbs.db
+ehthumbs_vista.db
+[Tt]humbs.db
+Desktop.ini

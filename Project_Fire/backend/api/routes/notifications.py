@@ -28,9 +28,11 @@ async def get_notifications(
     try:
         # For simplicity, we fetch notifications from 'notifications' collection
         # filtered by user_id if applicable, or general alerts
-        notifications_ref = db.collection('notifications')\
-                            .order_by('timestamp', direction='DESCENDING')\
-                            .limit(limit)
+        notifications_ref = (
+            db.collection('notifications')
+            .order_by('timestamp', direction='DESCENDING')
+            .limit(limit)
+        )
         
         docs = notifications_ref.stream()
         
