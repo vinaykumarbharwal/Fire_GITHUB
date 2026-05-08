@@ -6,7 +6,7 @@
  * so the app config is initialized without ES module imports here.
  */
 const firebaseConfig = {
-    apiKey: "AIzaSyBzuEycFugC88d1MIAUt-zQI9jq-l5uWvI",
+    apiKey: "REPLACED_WITH_SECURE_ENV_VAR",
     authDomain: "wildfirewatch-8f5b7.firebaseapp.com",
     projectId: "wildfirewatch-8f5b7",
     storageBucket: "wildfirewatch-8f5b7.firebasestorage.app",

@@ -214,7 +214,7 @@
         // Listen for verified citizen reports in real-time
         firebase.firestore().collection('citizen_reports')
             .onSnapshot(() => {
-                loadCitizenReports();
+                fetchCitizenReports();
             });
         firebase.firestore().collection('detections')
             .orderBy('timestamp', 'desc')
@@ -378,31 +378,33 @@
         } catch(e) { showToast('Failed: ' + e.message, 'error'); }
     };
 
-    async function loadCitizenReports() {
+    // Citizen reports fetching logic
+    async function fetchCitizenReports() {
         const tbody = document.getElementById('citizenReportTable');
+        if (!tbody) return;
         
-        async function fetchReports() {
-            try {
-                const response = await fetch(`${API_BASE_URL}/detections/citizen-reports`);
-                if (!response.ok) throw new Error('Failed to fetch from backend');
-                
-                const reports = await response.json();
-                renderCitizenTable(reports);
-                
-                const countEl = document.getElementById('stats-citizen');
-                if (countEl) countEl.textContent = reports.length;
-            } catch (err) {
-                console.error('Citizen reports error:', err);
-                if (tbody && tbody.innerHTML.includes('Loading')) {
-                    tbody.innerHTML = `<tr class="empty-row"><td colspan="6" style="color:#ef4444;">API Error: ${escHtml(err.message)}</td></tr>`;
-                }
+        try {
+            const response = await fetch(`${API_BASE_URL}/detections/citizen-reports`);
+            if (!response.ok) throw new Error('Failed to fetch from backend');
+            
+            const reports = await response.json();
+            renderCitizenTable(reports);
+            
+            const countEl = document.getElementById('stats-citizen');
+            if (countEl) countEl.textContent = reports.length;
+        } catch (err) {
+            console.error('Citizen reports error:', err);
+            if (tbody && tbody.innerHTML.includes('Loading')) {
+                tbody.innerHTML = `<tr class="empty-row"><td colspan="6" style="color:#ef4444;">API Error: ${escHtml(err.message)}</td></tr>`;
             }
         }
-        
+    }
+
+    async function loadCitizenReports() {
         // Initial fetch
-        await fetchReports();
-        // Poll every 2 seconds
-        setInterval(fetchReports, 2000);
+        await fetchCitizenReports();
+        // Poll every 5 seconds (real-time listener handles the rest)
+        setInterval(fetchCitizenReports, 5000);
     }
 
     function renderCitizenTable(reports) {
