@@ -66,6 +66,64 @@
         }
     };
 
+    window.verifyIncident = async function (id) {
+        if (!confirm('Mark this incident as VERIFIED?')) return;
+        showToast('Sending verify signal…', 'info');
+        try {
+            const res = await fetch(`${API_BASE_URL}/detections/${id}`, {
+                method: 'PUT',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ status: 'verified' })
+            });
+            if (res.ok) {
+                if (typeof firebase !== 'undefined' && firebase.apps.length > 0) {
+                    try { await firebase.firestore().collection('detections').doc(id).update({ status: 'verified' }); }
+                    catch (e) { console.warn('Firestore update:', e); }
+                }
+                const target = detections.find(d => d.id === id);
+                if (target) target.status = 'verified';
+                applyFilter();
+                updateStats();
+                showToast('Incident marked as verified.', 'success');
+                if (!isRealtime) fetchData();
+            } else {
+                const err = await res.json().catch(() => ({}));
+                throw new Error(err.detail || `HTTP ${res.status}`);
+            }
+        } catch (e) {
+            showToast(`Verify failed: ${e.message}`, 'error');
+        }
+    };
+
+    window.markFalseAlarm = async function (id) {
+        if (!confirm('Mark this incident as FALSE ALARM?')) return;
+        showToast('Marking as false alarm…', 'info');
+        try {
+            const res = await fetch(`${API_BASE_URL}/detections/${id}`, {
+                method: 'PUT',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ status: 'false_alarm' })
+            });
+            if (res.ok) {
+                if (typeof firebase !== 'undefined' && firebase.apps.length > 0) {
+                    try { await firebase.firestore().collection('detections').doc(id).update({ status: 'false_alarm' }); }
+                    catch (e) { console.warn('Firestore update:', e); }
+                }
+                const target = detections.find(d => d.id === id);
+                if (target) target.status = 'false_alarm';
+                applyFilter();
+                updateStats();
+                showToast('Incident marked as false alarm.', 'success');
+                if (!isRealtime) fetchData();
+            } else {
+                const err = await res.json().catch(() => ({}));
+                throw new Error(err.detail || `HTTP ${res.status}`);
+            }
+        } catch (e) {
+            showToast(`Update failed: ${e.message}`, 'error');
+        }
+    };
+
     window.purgeAllDetections = async function () {
         if (!confirm('CRITICAL: Purge ALL incidents from system?')) return;
         showToast('Master purge initiated…', 'info');
@@ -257,8 +315,14 @@
               <td>${statusBadge}</td>
               <td>
                 <div class="actions">
+                  <button class="action-btn btn-verify" onclick="verifyIncident('${d.id}')">
+                    <span class="material-symbols-outlined">verified</span> Verify
+                  </button>
                   <button class="action-btn btn-resolve" onclick="resolveIncident('${d.id}')">
                     <span class="material-symbols-outlined">check_circle</span> Resolve
+                  </button>
+                  <button class="action-btn btn-false" onclick="markFalseAlarm('${d.id}')">
+                    <span class="material-symbols-outlined">block</span> False Alarm
                   </button>
                   <button class="action-btn btn-delete" onclick="deleteIncident('${d.id}')">
                     <span class="material-symbols-outlined">delete</span> Delete

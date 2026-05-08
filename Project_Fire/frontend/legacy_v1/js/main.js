@@ -1088,7 +1088,7 @@
         if (btn) { btn.disabled = false; btn.innerHTML = 'Submit Sighting <span class="material-symbols-outlined">send</span>'; }
 
         if (saved) {
-            showToast('✅ Sighting submitted! Your report is now visible in the admin panel.', 'success');
+            showToast('✅ Sighting submitted!', 'success');
             document.getElementById('reportLocation').value    = '';
             document.getElementById('reportDescription').value = '';
         } else {
