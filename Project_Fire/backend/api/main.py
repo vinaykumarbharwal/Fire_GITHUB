@@ -137,10 +137,7 @@ async def health_check():
     except Exception:
         database_status = "offline"
 
-    try:
-        redis_status = "connected" if cache.redis and cache.redis.ping() else "offline"
-    except Exception:
-        redis_status = "offline"
+    redis_status = "disabled"
     
     return {
         "status": "healthy",

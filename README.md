@@ -75,7 +75,6 @@ graph TD
     C == "Sync (2s Polling)" ==> E
     
     F -- "Dispatches" --> G
-    G --> SMS[Twilio SMS]
     G --> EMAIL[SMTP Email]
     G --> PUSH[FCM Push]
 ```
@@ -91,16 +90,16 @@ Powered by **FastAPI** running atop `gunicorn` + `uvicorn`, the backend ingests 
 - **Supabase:** High-resolution evidentiary images are piped into optimized object buckets with secure backend-only mutation logic.
 
 ### 🔹 4. Event-Driven Alert Dispatcher
-When a detection is verified by an administrator, it triggers a custom notification engine. This detaches alert logic from the core processing loop, ensuring high-reliability multi-channel delivery across SMS, Email, and Push notifications via Twilio and SMTP.
+When a detection is verified by an administrator, it triggers a custom notification engine. This detaches alert logic from the core processing loop, ensuring high-reliability delivery across Email (SMTP) and Push notifications (FCM).
 
 ---
 
 ## ✨ Key Features
 
 - **📱 Mobile Capture Flow**: Flutter app sends image + GPS coordinates to the backend.
-- **🤝 Citizen Verification Workflow**: Public reporting portal where citizens submit sightings; admins then verify, solve, or flag reports as fake.
+- **🤝 Citizen Verification Workflow**: Public reporting portal where citizens submit sightings; admins then verify, solve, or flag reports as fake. Verified reports are immediately exposed to the public dashboard.
 - **📍 Real-Time Geocoding**: Automatically tags exact latitudes/longitudes and reverse maps the closest fire authorities.
-- **✉️ Redundant Alert Orchestration**: Parallel SMS (Twilio), Email (SMTP), and Push (FCM) notifications.
+- **✉️ Redundant Alert Orchestration**: Parallel Email (SMTP) and Push (FCM) notifications.
 - **🌐 Tactical Command Dashboard**: High-frequency (2s) real-time surveillance featuring unified verified incident feeds.
 - **🧠 ONNX Edge Inference**: Optimized backend model source at `Project_Fire/backend/api/models/fire_model.onnx`.
 - **🔐 Secure API Orchestration**: Role-Based Access Control (RBAC) ensuring all sensitive mutations bypass client-side rules.

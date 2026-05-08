@@ -1,47 +1,23 @@
-import redis
-import os
-import json
 import logging
+import json
 from typing import Any, Optional
+import os
 
 logger = logging.getLogger(__name__)
 
-REDIS_HOST = os.getenv("REDIS_HOST", "localhost")
-REDIS_PORT = int(os.getenv("REDIS_PORT", 6379))
-REDIS_DB = int(os.getenv("REDIS_DB", 0))
-
 class RedisCache:
+    """
+    Dummy cache service that replaces Redis.
+    The user requested removal of Redis to avoid connection errors.
+    """
     def __init__(self):
-        try:
-            self.redis = redis.Redis(
-                host=REDIS_HOST,
-                port=REDIS_PORT,
-                db=REDIS_DB,
-                decode_responses=True
-            )
-            # Test connection
-            self.redis.ping()
-        except Exception as e:
-            logger.warning(f"Redis connection failed: {e}. Falling back to no-cache.")
-            self.redis = None
+        self.redis = None
+        logger.info("📡 Redis cache disabled by user request. Running in no-cache mode.")
 
     def get(self, key: str) -> Optional[Any]:
-        if not self.redis:
-            return None
-        try:
-            value = self.redis.get(key)
-            return json.loads(value) if value else None
-        except Exception as e:
-            logger.error(f"Redis get error: {e}")
-            return None
+        return None
 
-    def set(self, key: str, value: Any, expire: int = 86400): # Default 24h
-        if not self.redis:
-            return
-        try:
-            self.redis.set(key, json.dumps(value), ex=expire)
-        except Exception as e:
-            logger.error(f"Redis set error: {e}")
+    def set(self, key: str, value: Any, expire: int = 3600):
+        return None
 
-# Global singleton instance
 cache = RedisCache()

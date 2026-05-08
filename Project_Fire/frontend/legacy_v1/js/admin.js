@@ -404,12 +404,15 @@
         const tbody = document.getElementById('citizenReportTable');
         if (!tbody) return;
 
-        if (reports.length === 0) {
-            tbody.innerHTML = '<tr class="empty-row"><td colspan="6">No citizen reports yet.</td></tr>';
+        // Filter: Only show "new" reports in the pending queue
+        const pendingReports = reports.filter(r => (r.status || 'new') === 'new');
+
+        if (pendingReports.length === 0) {
+            tbody.innerHTML = '<tr class="empty-row"><td colspan="6" style="padding: 40px; text-align: center; color: #64748B;">No pending reports in queue.</td></tr>';
             return;
         }
 
-        tbody.innerHTML = reports.map(r => {
+        tbody.innerHTML = pendingReports.map(r => {
             const date = r.timestamp ? new Date(r.timestamp).toLocaleString() : 'N/A';
             const latVal = parseFloat(r.latitude);
             const lngVal = parseFloat(r.longitude);

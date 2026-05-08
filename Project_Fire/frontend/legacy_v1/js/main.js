@@ -898,6 +898,14 @@
                     console.error('Firestore listener error:', err);
                     startPolling();
                 });
+            
+            // NEW: Listen for verified citizen reports in real-time
+            db.collection('citizen_reports')
+                .where('status', 'in', ['reviewed', 'solved'])
+                .onSnapshot(() => {
+                    // Re-load the list via API or just trigger refresh
+                    loadVerifiedCitizenReports();
+                });
         } catch (e) {
             console.error('Firebase setup error:', e);
             startPolling();
