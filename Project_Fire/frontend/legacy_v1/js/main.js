@@ -434,10 +434,69 @@
             if (typeof MapController !== 'undefined') {
                 MapController.updateMapMarkers(detections);
             }
+            
+            // Also load verified reports whenever we poll detections
+            loadVerifiedCitizenReports();
 
         } catch (error) {
             console.error('Error loading detections:', error);
         }
+    }
+
+    async function loadVerifiedCitizenReports() {
+        try {
+            const response = await fetch(`${API_BASE_URL}/detections/citizen-reports`);
+            const rawReports = await response.json();
+            
+            // Only show verified reports (reviewed or solved)
+            const verified = rawReports.filter(r => ['reviewed', 'solved'].includes((r.status||'').toLowerCase()));
+            
+            const grid = document.getElementById('citizenReportsGrid');
+            if (!grid) return;
+            
+            if (verified.length === 0) {
+                grid.innerHTML = '<div class="no-data text-slate-400 col-span-full py-8 text-center text-sm font-bold uppercase tracking-widest">No verified reports yet</div>';
+                return;
+            }
+            
+            grid.innerHTML = verified.map(r => createVerifiedReportCard(r)).join('');
+        } catch(e) {
+            console.error('Error loading verified reports:', e);
+        }
+    }
+    
+    function createVerifiedReportCard(r) {
+        const timeAgo = getTimeAgo(r.timestamp);
+        const imageUrl = r.image_url || 'https://raw.githubusercontent.com/vinaykumarbharwal/Fire_GITHUB/main/Project_Fire/mobile_app/flutter_app/assets/images/placeholder_fire.jpg';
+        
+        return `
+        <div class="detection-card group">
+            <div class="relative overflow-hidden aspect-video rounded-2xl mb-2">
+                <img src="${imageUrl}" class="w-full h-full object-cover transition-transform duration-700 group-hover:scale-110" onerror="this.src='https://via.placeholder.com/400x225?text=No+Photo'">
+                <div class="absolute bottom-4 right-4 z-10">
+                    <div class="bg-white/80 backdrop-blur-md px-3 py-1 rounded-lg border border-white/50 shadow-sm">
+                        <span class="text-[10px] font-black text-slate-900">${timeAgo}</span>
+                    </div>
+                </div>
+            </div>
+            <div class="flex flex-col gap-1 px-1">
+                <h3 class="text-sm font-black text-slate-900 uppercase tracking-tight truncate">${escHtml(r.location || 'Unknown')}</h3>
+                <p class="text-[10px] text-slate-500 line-clamp-2 mt-1 mb-2 h-[30px]">${escHtml(r.description || '')}</p>
+                <div class="flex items-center justify-between">
+                    <div class="flex flex-col">
+                        <span class="text-[9px] text-slate-400 font-bold uppercase tracking-widest">Type</span>
+                        <span class="text-[10px] font-black text-slate-900">Citizen Report</span>
+                    </div>
+                    <div class="flex flex-col items-end">
+                        <span class="text-[9px] text-slate-400 font-bold uppercase tracking-widest">Status</span>
+                        <span class="text-[10px] font-black uppercase" style="color: ${r.status === 'solved' ? '#10B981' : '#EF4444'}">
+                            ${r.status === 'solved' ? 'SOLVED' : 'VERIFIED'}
+                        </span>
+                    </div>
+                </div>
+            </div>
+        </div>
+        `;
     }
 
     function updateDetectionsGrid(detections) {
@@ -516,10 +575,12 @@
                     </div>
                     <div class="flex flex-col items-end">
                         <span class="text-[9px] text-slate-400 font-bold uppercase tracking-widest">Status</span>
-                        <span class="text-[10px] font-black px-2 py-0.5 rounded-md uppercase ${
-                            ['resolved','contained','false_alarm'].includes((detection.status||'').toLowerCase())
-                                ? 'bg-emerald-100 text-emerald-700'
-                                : 'bg-red-100 text-red-600'
+                        <span class="text-[10px] font-black uppercase" style="color: ${
+                            ['resolved', 'contained', 'solved'].includes((detection.status||'').toLowerCase())
+                                ? '#10B981' // Emerald/Green
+                                : ['false_alarm', 'fake'].includes((detection.status||'').toLowerCase())
+                                    ? '#64748B' // Slate/Gray
+                                    : '#EF4444' // Red
                         }">${detection.status}</span>
                     </div>
                 </div>
@@ -628,7 +689,13 @@
                         </div>
                         <div>
                             <p class="text-[10px] text-slate-400 font-black uppercase tracking-widest">Process Status</p>
-                            <p class="text-xs font-black text-slate-900 uppercase">${detection.status}</p>
+                            <p class="text-xs font-black uppercase" style="color: ${
+                                ['resolved', 'contained', 'solved'].includes((detection.status||'').toLowerCase())
+                                    ? '#10B981'
+                                    : ['false_alarm', 'fake'].includes((detection.status||'').toLowerCase())
+                                        ? '#64748B'
+                                        : '#EF4444'
+                            }">${detection.status}</p>
                         </div>
                     </div>
                     

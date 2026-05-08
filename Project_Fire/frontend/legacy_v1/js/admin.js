@@ -415,10 +415,17 @@
                        📍 ${parseFloat(r.latitude).toFixed(4)}, ${parseFloat(r.longitude).toFixed(4)}</a>`
                 : `<span style="color:#475569;font-size:10px;">No GPS</span>`;
 
-            const isReviewed = (r.status || '') === 'reviewed';
-            const badge = isReviewed
-                ? `<span class="status-badge resolved">Reviewed</span>`
-                : `<span class="status-badge pending">New</span>`;
+            const status = r.status || 'new';
+            let badge = '';
+            if (status === 'solved') {
+                badge = `<span class="status-badge" style="color: #10B981; border-color: rgba(16,185,129,0.3);">Solved</span>`;
+            } else if (status === 'fake') {
+                badge = `<span class="status-badge" style="color: #64748B; border-color: rgba(100,116,139,0.3);">Fake</span>`;
+            } else if (status === 'reviewed') {
+                badge = `<span class="status-badge resolved">Reviewed</span>`;
+            } else {
+                badge = `<span class="status-badge pending">New</span>`;
+            }
             
             const imageHtml = r.image_url ? 
                 `<div style="margin-top: 8px;"><a href="${r.image_url}" target="_blank"><img src="${r.image_url}" style="max-width: 120px; border-radius: 6px; border: 1px solid rgba(255,255,255,0.1);" alt="Evidence"></a></div>` : '';
@@ -435,9 +442,14 @@
               <td>${badge}</td>
               <td>
                 <div class="actions">
-                  ${!isReviewed ? `<button class="action-btn btn-resolve" onclick="dismissCitizenReport('${r.id}')">
-                    <span class="material-symbols-outlined">check_circle</span> Mark Reviewed
-                  </button>` : ''}
+                  ${!['solved', 'fake'].includes(status) ? `
+                    <button class="action-btn btn-resolve" onclick="dismissCitizenReport('${r.id}', 'solved')" style="color:#10B981; border-color:rgba(16,185,129,0.3);">
+                      <span class="material-symbols-outlined">verified</span> Solved
+                    </button>
+                    <button class="action-btn btn-resolve" onclick="dismissCitizenReport('${r.id}', 'fake')" style="color:#94a3b8; border-color:rgba(148,163,184,0.3);">
+                      <span class="material-symbols-outlined">block</span> Fake
+                    </button>
+                  ` : ''}
                   <button class="action-btn btn-delete" onclick="deleteCitizenReport('${r.id}')">
                     <span class="material-symbols-outlined">delete</span> Delete
                   </button>
@@ -447,11 +459,11 @@
         }).join('');
     }
 
-    window.dismissCitizenReport = async function(docId) {
+    window.dismissCitizenReport = async function(docId, newStatus = 'reviewed') {
         try {
-            const response = await fetch(`${API_BASE_URL}/detections/citizen-reports/${docId}/status`, { method: 'PUT' });
+            const response = await fetch(`${API_BASE_URL}/detections/citizen-reports/${docId}/status?status=${newStatus}`, { method: 'PUT' });
             if (!response.ok) throw new Error('Failed to update status');
-            showToast('Report marked as reviewed.', 'success');
+            showToast(`Report marked as ${newStatus}.`, 'success');
         } catch(e) { showToast('Update failed: ' + e.message, 'error'); }
     };
 

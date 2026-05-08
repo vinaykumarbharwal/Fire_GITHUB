@@ -372,15 +372,15 @@ async def get_citizen_reports(limit: int = Query(50, ge=1, le=200)):
 # PUT /citizen-reports/{report_id}/status – Update public report status
 # ══════════════════════════════════════════════
 @router.put("/citizen-reports/{report_id}/status")
-async def update_citizen_report_status(report_id: str):
-    """Mark a citizen report as reviewed."""
+async def update_citizen_report_status(report_id: str, status: str = Query("reviewed")):
+    """Update a citizen report status."""
     try:
         doc_ref = db.collection("citizen_reports").document(report_id)
         if not doc_ref.get().exists:
             raise HTTPException(status_code=404, detail="Report not found")
             
-        doc_ref.update({"status": "reviewed"})
-        return {"status": "success", "message": "Report marked as reviewed"}
+        doc_ref.update({"status": status})
+        return {"status": "success", "message": f"Report marked as {status}"}
     except Exception as exc:
         logger.error("Failed to update citizen report: %s", exc)
         raise HTTPException(status_code=500, detail="Failed to update report")
