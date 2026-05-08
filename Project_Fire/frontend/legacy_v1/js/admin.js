@@ -387,6 +387,10 @@
                 if (countEl) countEl.textContent = reports.length;
             }, err => {
                 console.error('Citizen reports error:', err);
+                const tbody = document.getElementById('citizenReportTable');
+                if (tbody) {
+                    tbody.innerHTML = `<tr class="empty-row"><td colspan="6" style="color:#ef4444;">Database Error: ${escHtml(err.message)}</td></tr>`;
+                }
             });
     }
 

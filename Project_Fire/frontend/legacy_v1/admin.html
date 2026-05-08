@@ -387,7 +387,7 @@
     </div>
 
     <nav class="sidebar-nav">
-      <a href="#" class="nav-item active">
+      <a href="#" class="nav-item active" id="nav-tactical" onclick="switchTab('tactical')">
         <span class="material-symbols-outlined">space_dashboard</span>
         Tactical Deck
       </a>
@@ -395,7 +395,7 @@
         <span class="material-symbols-outlined">public</span>
         Public Dashboard
       </a>
-      <a href="#citizen-reports" class="nav-item">
+      <a href="#" class="nav-item" id="nav-citizen" onclick="switchTab('citizen')">
         <span class="material-symbols-outlined">campaign</span>
         Reported Fire Incidents
       </a>
@@ -441,6 +441,9 @@
 
     <!-- CONTENT -->
     <div class="content">
+
+      <!-- TACTICAL DECK VIEW -->
+      <div id="tactical-deck-view">
 
       <!-- STATS -->
         <div class="stats-grid">
@@ -510,10 +513,10 @@
         </div>
       </div>
 
-      </div>
+      </div> <!-- /tactical-deck-view -->
 
       <!-- CITIZEN REPORTS TABLE -->
-      <div id="citizen-reports" class="table-card" style="margin-top:24px; scroll-margin-top: 80px;">
+      <div id="citizen-reports" class="table-card" style="margin-top:24px; display:none;">
         <div class="table-header">
           <div class="table-title">
             <h3 style="color:#F59E0B">🔔 Reported Fire Incidents</h3>
@@ -549,5 +552,21 @@
   <script src="js/config.js"></script>
   <script src="js/firebase-config.js"></script>
   <script src="js/admin.js"></script>
+  <script>
+    function switchTab(tabName) {
+      document.getElementById('nav-tactical').classList.remove('active');
+      document.getElementById('nav-citizen').classList.remove('active');
+      
+      if (tabName === 'tactical') {
+        document.getElementById('nav-tactical').classList.add('active');
+        document.getElementById('tactical-deck-view').style.display = 'block';
+        document.getElementById('citizen-reports').style.display = 'none';
+      } else {
+        document.getElementById('nav-citizen').classList.add('active');
+        document.getElementById('tactical-deck-view').style.display = 'none';
+        document.getElementById('citizen-reports').style.display = 'block';
+      }
+    }
+  </script>
 </body>
 </html>
