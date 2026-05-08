@@ -180,26 +180,50 @@
             });
         });
 
-        // Emergency Button → Open SOS Modal
-        document.getElementById('emergencyButton')?.addEventListener('click', () => {
-            const modal = document.getElementById('emergencyModal');
-            if (modal) {
-                modal.classList.remove('hidden');
-                // Reset form state
-                document.getElementById('sosFormBody')?.classList.add('hidden');
-                document.getElementById('sosLocation && ') && (document.getElementById('sosLocation').value = '');
-                document.getElementById('sosDescription') && (document.getElementById('sosDescription').value = '');
-                document.getElementById('sosPinStatus').textContent = 'Broadcasts your coordinates to the monitoring grid';
-                document.getElementById('sosPinIcon').textContent = 'my_location';
-            }
+        // Emergency Button → Open SOS Modal (with scroll lock)
+        document.getElementById('emergencyButton')?.addEventListener('click', (e) => {
+            e.stopPropagation();
+            openSosModal();
         });
 
         // Close SOS modal on backdrop click
         document.getElementById('emergencyModal')?.addEventListener('click', (e) => {
             if (e.target === document.getElementById('emergencyModal')) {
-                document.getElementById('emergencyModal').classList.add('hidden');
+                closeSosModal();
             }
         });
+
+        // Close on Escape key
+        document.addEventListener('keydown', (e) => {
+            if (e.key === 'Escape') closeSosModal();
+        });
+    }
+
+    function openSosModal() {
+        const modal = document.getElementById('emergencyModal');
+        if (!modal) return;
+        // Lock scroll
+        document.body.style.overflow = 'hidden';
+        // Reset form state
+        document.getElementById('sosFormBody')?.classList.add('hidden');
+        const locEl = document.getElementById('sosLocation');
+        const descEl = document.getElementById('sosDescription');
+        if (locEl) locEl.value = '';
+        if (descEl) descEl.value = '';
+        const pinStatus = document.getElementById('sosPinStatus');
+        const pinIcon   = document.getElementById('sosPinIcon');
+        if (pinStatus) pinStatus.textContent = 'Broadcasts your coordinates to the monitoring grid';
+        if (pinIcon)   pinIcon.textContent   = 'my_location';
+        const pinBtn = document.getElementById('sosPinBtn');
+        if (pinBtn) pinBtn.disabled = false;
+        modal.classList.remove('hidden');
+    }
+
+    function closeSosModal() {
+        const modal = document.getElementById('emergencyModal');
+        if (!modal) return;
+        modal.classList.add('hidden');
+        document.body.style.overflow = '';
     }
 
     async function loadStats() {
@@ -934,7 +958,7 @@
                 }
 
                 btn.disabled = false;
-                setTimeout(() => document.getElementById('emergencyModal').classList.add('hidden'), 1500);
+                setTimeout(() => closeSosModal(), 1500);
             },
             (err) => {
                 statusEl.textContent = 'Location access denied. Enter manually.';
@@ -975,7 +999,11 @@
             showToast('Report saved locally — will sync when backend is online.', 'info');
         }
 
-        document.getElementById('emergencyModal').classList.add('hidden');
+        closeSosModal();
     };
+
+    // Expose modal helpers globally for inline onclick handlers
+    window.closeSosModal = closeSosModal;
+    window.openSosModal  = openSosModal;
 
 })();
