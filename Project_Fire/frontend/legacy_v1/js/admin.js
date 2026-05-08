@@ -442,7 +442,12 @@
               <td>${badge}</td>
               <td>
                 <div class="actions">
-                  ${!['solved', 'fake'].includes(status) ? `
+                  ${status === 'new' || !['reviewed', 'solved', 'fake'].includes(status) ? `
+                    <button class="action-btn btn-resolve" onclick="dismissCitizenReport('${r.id}', 'reviewed')" style="color:#F59E0B; border-color:rgba(245,158,11,0.3);">
+                      <span class="material-symbols-outlined">rule</span> Verify
+                    </button>
+                  ` : ''}
+                  ${status !== 'solved' && status !== 'fake' ? `
                     <button class="action-btn btn-resolve" onclick="dismissCitizenReport('${r.id}', 'solved')" style="color:#10B981; border-color:rgba(16,185,129,0.3);">
                       <span class="material-symbols-outlined">verified</span> Solved
                     </button>
