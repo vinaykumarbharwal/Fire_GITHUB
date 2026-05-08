@@ -236,26 +236,24 @@
                         Active Detection Points
                     </p>
                     <div class="flex items-baseline gap-4">
-                        <h3 class="text-8xl font-black text-slate-900 dark:text-white tracking-tighter">142</h3>
+                        <h3 id="heroActiveDetections" class="text-8xl font-black text-slate-900 dark:text-white tracking-tighter">—</h3>
                         <div class="flex flex-col items-start">
-                            <span
-                                class="text-primary text-sm font-black bg-white dark:bg-slate-800 px-3 py-1 rounded-lg border border-primary/10 uppercase tracking-tighter">-12%
-                                Low</span>
-                            <span class="text-slate-400 dark:text-slate-500 text-[10px] font-bold uppercase mt-1">24h
-                                delta</span>
+                            <span id="heroActiveBadge"
+                                class="text-primary text-sm font-black bg-white dark:bg-slate-800 px-3 py-1 rounded-lg border border-primary/10 uppercase tracking-tighter">Live</span>
+                            <span class="text-slate-400 dark:text-slate-500 text-[10px] font-bold uppercase mt-1">Active fires</span>
                         </div>
                     </div>
                 </div>
                 <div class="space-y-4 md:border-l border-slate-200 dark:border-white/10 md:pl-16">
-                    <p class="text-slate-400 dark:text-slate-500 text-[10px] font-black uppercase tracking-[0.4em]">Avg
-                        Response Time</p>
+                    <p class="text-slate-400 dark:text-slate-500 text-[10px] font-black uppercase tracking-[0.4em]">Total
+                        Detections</p>
                     <div class="flex items-baseline gap-4">
-                        <h3 class="text-8xl font-black text-primary tracking-tighter">04:12</h3>
+                        <h3 id="heroTotalDetections" class="text-8xl font-black text-primary tracking-tighter">—</h3>
                         <div class="flex flex-col items-start">
+                            <span id="heroTotalBadge"
+                                class="text-slate-900 dark:text-white text-sm font-black bg-white dark:bg-slate-800 px-3 py-1 rounded-lg border border-slate-200 dark:border-white/10 uppercase tracking-tighter">All-time</span>
                             <span
-                                class="text-slate-900 dark:text-white text-sm font-black bg-white dark:bg-slate-800 px-3 py-1 rounded-lg border border-slate-200 dark:border-white/10 uppercase tracking-tighter">Optimal</span>
-                            <span
-                                class="text-slate-400 dark:text-slate-500 text-[10px] font-bold uppercase mt-1">Seconds</span>
+                                class="text-slate-400 dark:text-slate-500 text-[10px] font-bold uppercase mt-1">Records</span>
                         </div>
                     </div>
                 </div>
@@ -316,53 +314,6 @@
                     </div>
                 </div>
 
-                <!-- Live Camera Feed (NEW) -->
-                <div class="feed-container group">
-                    <div class="relative overflow-hidden aspect-video bg-slate-900">
-                        <video id="cameraFeed" class="w-full h-full object-cover" autoplay playsinline muted></video>
-                        <canvas id="frameCanvas" class="hidden"></canvas>
-                        
-                        <!-- Overlay when camera is off -->
-                        <div id="cameraOffOverlay" class="absolute inset-0 flex flex-col items-center justify-center bg-slate-900/90 gap-4 transition-opacity duration-500 z-20">
-                            <div class="w-16 h-16 rounded-full bg-white/5 flex items-center justify-center border border-white/10">
-                                <span class="material-symbols-outlined text-slate-500 text-3xl">videocam_off</span>
-                            </div>
-                            <div class="text-center">
-                                <p class="text-[10px] font-black text-white uppercase tracking-widest">Surveillance Offline</p>
-                                <p class="text-[8px] text-slate-500 font-bold uppercase mt-1">Activate local node camera</p>
-                            </div>
-                        </div>
-
-                        <!-- AI Recognition Bounds Overlay -->
-                        <div id="aiBoundingBox" class="absolute hidden border-2 border-primary shadow-[0_0_15px_rgba(255,75,75,0.5)] z-10">
-                            <div class="absolute -top-6 left-0 bg-primary text-white text-[8px] font-black px-2 py-0.5 rounded-t-md whitespace-nowrap">
-                                <span id="aiLabel">FIRE</span> <span id="aiConfidence">0%</span>
-                            </div>
-                        </div>
-
-                        <div class="absolute inset-0 p-8 flex flex-col justify-between z-30 pointer-events-none">
-                            <div class="flex justify-between items-start pointer-events-auto">
-                                <div class="bg-emerald-500 text-white px-4 py-2 rounded-lg font-black text-[10px] tracking-widest uppercase shadow-lg flex items-center gap-2">
-                                    <span class="w-1.5 h-1.5 bg-white rounded-full animate-pulse" id="cameraStatusDot"></span>
-                                    LIVE-NODE-SURVEILLANCE
-                                </div>
-                                <button id="cameraToggleBtn" class="bg-white/10 backdrop-blur-md hover:bg-primary text-white p-2.5 rounded-xl transition-all border border-white/10 shadow-xl group/btn">
-                                    <span class="material-symbols-outlined text-xl" id="cameraToggleIcon">videocam</span>
-                                </button>
-                            </div>
-                            
-                            <div class="space-y-4">
-                                <div class="flex justify-between text-[10px] font-black text-white uppercase tracking-widest drop-shadow-md">
-                                    <span>AI Neural Engine</span>
-                                    <span id="aiStatus" class="text-white flex items-center gap-1 opacity-60">Offline</span>
-                                </div>
-                                <div class="h-1.5 w-full bg-white/20 rounded-full overflow-hidden backdrop-blur-sm">
-                                    <div id="aiAnalysisBar" class="h-full bg-primary transition-all duration-300 shadow-[0_0_10px_rgba(255,75,75,0.8)]" style="width: 0%"></div>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-                </div>
 
                 <!-- Drone Feed -->
                 <div class="feed-container group">

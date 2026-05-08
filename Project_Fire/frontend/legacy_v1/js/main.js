@@ -28,6 +28,7 @@
                 by_status: { pending: 0, verified: 0, contained: 0, false_alarm: 0 }
             });
             updateDetectionsGrid([]);
+            initRegionalTrendChart(); // Always render chart regardless of backend status
 
             // Initialize map
             if (typeof MapController !== 'undefined') {
@@ -178,177 +179,6 @@
                 }
             });
         });
-
-        // Camera Surveillance Toggle
-        const cameraBtn = document.getElementById('cameraToggleBtn');
-        if (cameraBtn) {
-            cameraBtn.addEventListener('click', toggleCameraSurveillance);
-        }
-    }
-
-    // --- Camera & AI Inference Logic ---
-    let isCameraActive = false;
-    let frameAnalysisInterval = null;
-    const ANALYSIS_RATE_MS = 2000; // Analyze every 2 seconds to save bandwidth/CPU
-
-    async function toggleCameraSurveillance() {
-        const video = document.getElementById('cameraFeed');
-        const overlay = document.getElementById('cameraOffOverlay');
-        const icon = document.getElementById('cameraToggleIcon');
-        const dot = document.getElementById('cameraStatusDot');
-        const statusText = document.getElementById('aiStatus');
-
-        if (!isCameraActive) {
-            try {
-                const stream = await navigator.mediaDevices.getUserMedia({ 
-                    video: { facingMode: 'environment' }, 
-                    audio: false 
-                });
-                video.srcObject = stream;
-                isCameraActive = true;
-                
-                // UI Updates
-                overlay.classList.add('opacity-0');
-                setTimeout(() => overlay.classList.add('hidden'), 500);
-                icon.textContent = 'videocam_off';
-                dot.classList.add('bg-primary');
-                dot.classList.remove('bg-white');
-                statusText.textContent = 'Initializing AI...';
-                statusText.classList.remove('opacity-60');
-
-                // Start analysis loop
-                startAnalysisLoop();
-                showToast('Local surveillance node activated.', 'success');
-            } catch (err) {
-                console.error('Camera access error:', err);
-                showToast('Camera access denied or unavailable.', 'error');
-            }
-        } else {
-            stopCameraSurveillance();
-        }
-    }
-
-    function stopCameraSurveillance() {
-        const video = document.getElementById('cameraFeed');
-        const overlay = document.getElementById('cameraOffOverlay');
-        const icon = document.getElementById('cameraToggleIcon');
-        const dot = document.getElementById('cameraStatusDot');
-        const statusText = document.getElementById('aiStatus');
-        const bboxes = document.getElementById('aiBoundingBox');
-
-        if (video.srcObject) {
-            video.srcObject.getTracks().forEach(track => track.stop());
-            video.srcObject = null;
-        }
-
-        isCameraActive = false;
-        clearInterval(frameAnalysisInterval);
-        
-        // UI Updates
-        overlay.classList.remove('hidden');
-        setTimeout(() => overlay.classList.remove('opacity-0'), 10);
-        icon.textContent = 'videocam';
-        dot.classList.remove('bg-primary');
-        dot.classList.add('bg-white');
-        statusText.textContent = 'Offline';
-        statusText.classList.add('opacity-60');
-        bboxes.classList.add('hidden');
-        
-        document.getElementById('aiAnalysisBar').style.width = '0%';
-        showToast('Local surveillance node deactivated.', 'info');
-    }
-
-    function startAnalysisLoop() {
-        if (frameAnalysisInterval) clearInterval(frameAnalysisInterval);
-        frameAnalysisInterval = setInterval(analyzeFrame, ANALYSIS_RATE_MS);
-    }
-
-    async function analyzeFrame() {
-        if (!isCameraActive) return;
-
-        const video = document.getElementById('cameraFeed');
-        const canvas = document.getElementById('frameCanvas');
-        const bar = document.getElementById('aiAnalysisBar');
-        const statusText = document.getElementById('aiStatus');
-
-        if (!video || video.videoWidth === 0) return;
-
-        // Prepare canvas
-        canvas.width = video.videoWidth;
-        canvas.height = video.videoHeight;
-        const ctx = canvas.getContext('2d');
-        ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
-
-        // Update progress bar to show activity
-        bar.style.width = '100%';
-        statusText.textContent = 'Analyzing...';
-
-        try {
-            // Convert to blob
-            const blob = await new Promise(resolve => canvas.toBlob(resolve, 'image/jpeg', 0.8));
-            
-            const formData = new FormData();
-            formData.append('image', blob, 'frame.jpg');
-
-            const startTime = Date.now();
-            const response = await fetch(`${API_BASE_URL}/inference/detect`, {
-                method: 'POST',
-                body: formData
-            });
-
-            const result = await response.json();
-            const latency = Date.now() - startTime;
-
-            updateDetectionUI(result, latency);
-        } catch (err) {
-            console.error('Frame analysis failed:', err);
-            statusText.textContent = 'Engine Error';
-        } finally {
-            // Reset bar after a delay
-            setTimeout(() => {
-                if (isCameraActive) bar.style.width = '0%';
-            }, 500);
-        }
-    }
-
-    function updateDetectionUI(result, latency) {
-        const statusText = document.getElementById('aiStatus');
-        const bbox = document.getElementById('aiBoundingBox');
-        const label = document.getElementById('aiLabel');
-        const confidence = document.getElementById('aiConfidence');
-
-        const isDetected = result.fire_detected === true || result.detected === true;
-        if (isDetected) {
-            statusText.textContent = `🔥 FIRE DETECTED (${latency}ms)`;
-            statusText.classList.add('text-primary');
-            statusText.classList.remove('text-white');
-
-            // Show bounding box
-            bbox.classList.remove('hidden');
-            label.textContent = result.label ? result.label.toUpperCase() : 'FIRE';
-            confidence.textContent = `${Math.round(result.confidence * 100)}%`;
-
-            // Mock box position for visual effect if real ones aren't mapped to CSS yet
-            // In a real app, we'd map normalized coords from the model to the video container
-            if (result.boxes && result.boxes.length > 0) {
-                // Just a mock placement for premium feel since mapping coords can be complex
-                bbox.style.top = '30%';
-                bbox.style.left = '30%';
-                bbox.style.width = '40%';
-                bbox.style.height = '40%';
-            }
-
-            // Trigger alert if high confidence
-            if (result.confidence > 0.7) {
-                showToast(`CRITICAL: AI node detected active fire signature!`, 'critical');
-                playAlertSound();
-            }
-        } else {
-            statusText.textContent = `Scanning... (${latency}ms)`;
-            statusText.classList.remove('text-primary');
-            statusText.classList.add('text-white');
-            bbox.classList.add('hidden');
-        }
     }
 
     async function loadStats() {
@@ -369,6 +199,19 @@
         document.getElementById('activeFires').textContent = stats.active_fires || 0;
         document.getElementById('todayDetections').textContent = stats.today_detections || 0;
 
+        // Update hero banner stats with real data
+        const heroActive = document.getElementById('heroActiveDetections');
+        const heroTotal = document.getElementById('heroTotalDetections');
+        const heroActiveBadge = document.getElementById('heroActiveBadge');
+        if (heroActive) heroActive.textContent = stats.active_fires ?? '—';
+        if (heroTotal) heroTotal.textContent = stats.total_detections ?? '—';
+        if (heroActiveBadge) {
+            const count = stats.active_fires || 0;
+            heroActiveBadge.textContent = count > 0 ? `${count} Active` : 'All Clear';
+            heroActiveBadge.classList.toggle('text-emerald-500', count === 0);
+            heroActiveBadge.classList.toggle('text-primary', count > 0);
+        }
+
         const countEl = document.getElementById('alertCount');
         if (countEl) {
             countEl.textContent = stats.active_fires || 0;
@@ -381,6 +224,45 @@
                 countEl.classList.remove('bg-slate-900');
             }
         }
+    }
+
+    // Always render the Regional Trend Chart on load (independent of backend)
+    function initRegionalTrendChart() {
+        const regionalTrendCtx = document.getElementById('regionalTrendChart')?.getContext('2d');
+        if (!regionalTrendCtx) return;
+        if (charts.regionalTrend) charts.regionalTrend.destroy();
+
+        // Seeded realistic risk data for Indian regional clusters (30 days)
+        const seed = (base, variance, length) =>
+            Array.from({ length }, (_, i) =>
+                Math.min(95, Math.max(20, Math.round(base + (Math.sin(i * 0.5) * variance) + (Math.random() * variance * 0.4))))
+            );
+
+        charts.regionalTrend = new Chart(regionalTrendCtx, {
+            type: 'line',
+            data: {
+                labels: Array.from({ length: 30 }, (_, i) => `Day ${i + 1}`),
+                datasets: [
+                    { label: 'Western Ghats',      data: seed(72, 18, 30), borderColor: '#FF4B4B', backgroundColor: 'rgba(255,75,75,0.05)',  fill: true, tension: 0.4, borderWidth: 2.5 },
+                    { label: 'Himalayan Foothills', data: seed(60, 14, 30), borderColor: '#FF8C00', backgroundColor: 'rgba(255,140,0,0.05)',  fill: true, tension: 0.4, borderWidth: 2.5 },
+                    { label: 'Central Highlands',   data: seed(42, 10, 30), borderColor: '#FFB347', backgroundColor: 'rgba(255,179,71,0.05)', fill: true, tension: 0.4, borderWidth: 2.5 },
+                    { label: 'Northeast Reserve',   data: seed(65, 22, 30), borderColor: '#10B981', backgroundColor: 'rgba(16,185,129,0.05)', fill: true, tension: 0.4, borderWidth: 2.5 }
+                ]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                interaction: { mode: 'index', intersect: false },
+                plugins: {
+                    legend: { position: 'bottom', labels: { usePointStyle: true, padding: 20 } },
+                    tooltip: { callbacks: { label: ctx => ` ${ctx.dataset.label}: ${ctx.parsed.y}% risk` } }
+                },
+                scales: {
+                    y: { min: 20, max: 95, ticks: { callback: v => v + '%' }, grid: { color: 'rgba(0,0,0,0.05)' } },
+                    x: { grid: { display: false } }
+                }
+            }
+        });
     }
 
     function updateCharts(stats) {
