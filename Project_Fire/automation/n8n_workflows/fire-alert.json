@@ -27,22 +27,7 @@
         300
       ]
     },
-    {
-      "parameters": {
-        "resource": "message",
-        "operation": "create",
-        "to": "={{$json.results[0].formatted_phone_number}}",
-        "from": "={{$env.TWILIO_PHONE_NUMBER}}",
-        "body": "=🔥 WILDFIRE DETECTED!\nSeverity: {{$node[\"Firestore Trigger\"].json.severity}}\nLocation: {{$node[\"Firestore Trigger\"].json.address}}\nConfidence: {{$node[\"Firestore Trigger\"].json.confidence * 100}}%\n\nMap: https://maps.google.com/?q={{$node[\"Firestore Trigger\"].json.latitude}},{{$node[\"Firestore Trigger\"].json.longitude}}\nImage: {{$node[\"Firestore Trigger\"].json.image_url}}"
-      },
-      "id": "send-sms",
-      "name": "Send SMS Alert",
-      "type": "n8n-nodes-base.twilio",
-      "position": [
-        650,
-        200
-      ]
-    },
+
     {
       "parameters": {
         "fromEmail": "={{$env.EMAIL_USER}}",

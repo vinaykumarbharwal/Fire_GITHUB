@@ -354,19 +354,21 @@
             charts.status = new Chart(statusCtx, {
                 type: 'bar',
                 data: {
-                    labels: ['Pending', 'Verified', 'Contained', 'False Alarm'],
+                    labels: ['Pending', 'Verified', 'Contained', 'Resolved', 'False Alarm'],
                     datasets: [{
                         label: 'Detections',
                         data: [
                             stats.by_status?.pending || 0,
                             stats.by_status?.verified || 0,
                             stats.by_status?.contained || 0,
+                            stats.by_status?.resolved || 0,
                             stats.by_status?.false_alarm || 0
                         ],
                         backgroundColor: [
                             '#ffc107',
                             '#28a745',
                             '#17a2b8',
+                            '#10b981',
                             '#6c757d'
                         ]
                     }]
@@ -817,8 +819,12 @@
                             detections = detections.filter(d => d.id !== docId);
                         }
                         
+                        
                         filterDetections();
                     });
+                    
+                    // Update global stats & charts when real-time data changes
+                    loadStats().catch(e => console.warn('Stats sync failed:', e));
                     
                     isInitialSync = false;
                 }, (err) => {
