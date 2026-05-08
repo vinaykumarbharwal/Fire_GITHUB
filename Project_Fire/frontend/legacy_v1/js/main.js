@@ -448,8 +448,8 @@
             const response = await fetch(`${API_BASE_URL}/detections/citizen-reports`);
             const rawReports = await response.json();
             
-            // Only show verified reports (reviewed or solved)
-            const verified = rawReports.filter(r => ['reviewed', 'solved'].includes((r.status||'').toLowerCase()));
+            // Show reports that are verified, reviewed, or solved
+            const verified = rawReports.filter(r => ['verified', 'reviewed', 'solved'].includes((r.status||'').toLowerCase()));
             
             const grid = document.getElementById('citizenReportsGrid');
             if (!grid) return;
@@ -899,11 +899,9 @@
                     startPolling();
                 });
             
-            // NEW: Listen for verified citizen reports in real-time
+            // Listen for verified citizen reports in real-time
             db.collection('citizen_reports')
-                .where('status', 'in', ['reviewed', 'solved'])
                 .onSnapshot(() => {
-                    // Re-load the list via API or just trigger refresh
                     loadVerifiedCitizenReports();
                 });
         } catch (e) {

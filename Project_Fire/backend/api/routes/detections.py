@@ -372,7 +372,7 @@ async def get_citizen_reports(limit: int = Query(50, ge=1, le=200)):
 # PUT /citizen-reports/{report_id}/status – Update public report status
 # ══════════════════════════════════════════════
 @router.put("/citizen-reports/{report_id}/status")
-async def update_citizen_report_status(report_id: str, status: str = Query("reviewed")):
+async def update_citizen_report_status(report_id: str, status: str = Query("verified")):
     """Update a citizen report status."""
     try:
         doc_ref = db.collection("citizen_reports").document(report_id)

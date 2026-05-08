@@ -211,6 +211,11 @@
 
     function setupRealtimeListeners() {
         if (typeof firebase === 'undefined') return;
+        // Listen for verified citizen reports in real-time
+        firebase.firestore().collection('citizen_reports')
+            .onSnapshot(() => {
+                loadCitizenReports();
+            });
         firebase.firestore().collection('detections')
             .orderBy('timestamp', 'desc')
             .onSnapshot(snapshot => {
@@ -362,11 +367,11 @@
     // ─── Citizen Reports ─────────────────────────────────────────────────────
 
     window.dismissCitizenReport = async function(docId) {
-        if (!confirm('Mark this citizen report as reviewed?')) return;
+        if (!confirm('Mark this citizen report as verified?')) return;
         try {
             if (typeof firebase !== 'undefined' && firebase.apps.length > 0) {
-                await firebase.firestore().collection('citizen_reports').doc(docId).update({ status: 'reviewed' });
-                showToast('Report marked as reviewed.', 'success');
+                await firebase.firestore().collection('citizen_reports').doc(docId).update({ status: 'verified' });
+                showToast('Report marked as verified.', 'success');
             } else {
                 showToast('Firebase not connected.', 'error');
             }
@@ -404,15 +409,12 @@
         const tbody = document.getElementById('citizenReportTable');
         if (!tbody) return;
 
-        // Filter: Only show "new" reports in the pending queue
-        const pendingReports = reports.filter(r => (r.status || 'new') === 'new');
-
-        if (pendingReports.length === 0) {
-            tbody.innerHTML = '<tr class="empty-row"><td colspan="6" style="padding: 40px; text-align: center; color: #64748B;">No pending reports in queue.</td></tr>';
+        if (reports.length === 0) {
+            tbody.innerHTML = '<tr class="empty-row"><td colspan="6" style="padding: 40px; text-align: center; color: #64748B;">No citizen reports yet.</td></tr>';
             return;
         }
 
-        tbody.innerHTML = pendingReports.map(r => {
+        tbody.innerHTML = reports.map(r => {
             const date = r.timestamp ? new Date(r.timestamp).toLocaleString() : 'N/A';
             const latVal = parseFloat(r.latitude);
             const lngVal = parseFloat(r.longitude);
@@ -428,8 +430,8 @@
                 badge = `<span class="status-badge" style="color: #10B981; border-color: rgba(16,185,129,0.3);">Solved</span>`;
             } else if (status === 'fake') {
                 badge = `<span class="status-badge" style="color: #64748B; border-color: rgba(100,116,139,0.3);">Fake</span>`;
-            } else if (status === 'reviewed') {
-                badge = `<span class="status-badge resolved">Reviewed</span>`;
+            } else if (status === 'reviewed' || status === 'verified') {
+                badge = `<span class="status-badge resolved">Verified</span>`;
             } else {
                 badge = `<span class="status-badge pending">New</span>`;
             }
@@ -449,14 +451,14 @@
               <td>${badge}</td>
               <td>
                 <div class="actions">
-                  ${status === 'new' || !['reviewed', 'solved', 'fake'].includes(status) ? `
-                    <button class="action-btn btn-resolve" onclick="dismissCitizenReport('${r.id}', 'reviewed')" style="color:#F59E0B; border-color:rgba(245,158,11,0.3);">
-                      <span class="material-symbols-outlined">rule</span> Verify
+                  ${(status === 'new' || !['verified', 'reviewed', 'solved', 'fake'].includes(status)) ? `
+                    <button class="action-btn btn-resolve" onclick="dismissCitizenReport('${r.id}', 'verified')" style="color:#F59E0B; border-color:rgba(245,158,11,0.3);">
+                      <span class="material-symbols-outlined">verified</span> Verify
                     </button>
                   ` : ''}
                   ${status !== 'solved' && status !== 'fake' ? `
                     <button class="action-btn btn-resolve" onclick="dismissCitizenReport('${r.id}', 'solved')" style="color:#10B981; border-color:rgba(16,185,129,0.3);">
-                      <span class="material-symbols-outlined">verified</span> Solved
+                      <span class="material-symbols-outlined">check_circle</span> Solved
                     </button>
                     <button class="action-btn btn-resolve" onclick="dismissCitizenReport('${r.id}', 'fake')" style="color:#94a3b8; border-color:rgba(148,163,184,0.3);">
                       <span class="material-symbols-outlined">block</span> Fake
@@ -471,7 +473,7 @@
         }).join('');
     }
 
-    window.dismissCitizenReport = async function(docId, newStatus = 'reviewed') {
+    window.dismissCitizenReport = async function(docId, newStatus = 'verified') {
         try {
             const response = await fetch(`${API_BASE_URL}/detections/citizen-reports/${docId}/status?status=${newStatus}`, { method: 'PUT' });
             if (!response.ok) throw new Error('Failed to update status');
