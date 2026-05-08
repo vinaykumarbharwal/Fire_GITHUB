@@ -8,8 +8,8 @@ const MapController = {
     initializeMap: function () {
         if (this.map) return;
 
-        const defaultCenter = [28.6139, 77.2090];
-        this.map = L.map('fireMap').setView(defaultCenter, 10);
+        const defaultCenter = [20.5937, 78.9629]; // Geographic center of India
+        this.map = L.map('fireMap').setView(defaultCenter, 5);
 
         // Premium Free Satellite Map (Esri) - Perfect for Wildfire tracking, NO API key needed
         this.lightTiles = L.tileLayer('https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}', {
