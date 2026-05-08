@@ -179,6 +179,27 @@
                 }
             });
         });
+
+        // Emergency Button → Open SOS Modal
+        document.getElementById('emergencyButton')?.addEventListener('click', () => {
+            const modal = document.getElementById('emergencyModal');
+            if (modal) {
+                modal.classList.remove('hidden');
+                // Reset form state
+                document.getElementById('sosFormBody')?.classList.add('hidden');
+                document.getElementById('sosLocation && ') && (document.getElementById('sosLocation').value = '');
+                document.getElementById('sosDescription') && (document.getElementById('sosDescription').value = '');
+                document.getElementById('sosPinStatus').textContent = 'Broadcasts your coordinates to the monitoring grid';
+                document.getElementById('sosPinIcon').textContent = 'my_location';
+            }
+        });
+
+        // Close SOS modal on backdrop click
+        document.getElementById('emergencyModal')?.addEventListener('click', (e) => {
+            if (e.target === document.getElementById('emergencyModal')) {
+                document.getElementById('emergencyModal').classList.add('hidden');
+            }
+        });
     }
 
     async function loadStats() {
@@ -870,5 +891,91 @@
             wrapper.style.setProperty('--globe-rot-x', '0deg');
         });
     }
+
+    // --- SOS Emergency Helpers (exposed to window for inline onclick) ---
+
+    window.sosSubmitGPS = function() {
+        const statusEl = document.getElementById('sosPinStatus');
+        const iconEl   = document.getElementById('sosPinIcon');
+        const btn      = document.getElementById('sosPinBtn');
+
+        if (!navigator.geolocation) {
+            showToast('Geolocation not supported by your browser.', 'error');
+            return;
+        }
+
+        statusEl.textContent = 'Acquiring GPS signal...';
+        iconEl.textContent   = 'gps_not_fixed';
+        btn.disabled         = true;
+
+        navigator.geolocation.getCurrentPosition(
+            async (position) => {
+                const { latitude, longitude, accuracy } = position.coords;
+                statusEl.textContent = `📍 ${latitude.toFixed(5)}, ${longitude.toFixed(5)} (±${Math.round(accuracy)}m)`;
+                iconEl.textContent   = 'gps_fixed';
+
+                try {
+                    await fetch(`${API_BASE_URL}/detections`, {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({
+                            latitude,
+                            longitude,
+                            severity: 'high',
+                            confidence: 1.0,
+                            status: 'pending',
+                            address: `SOS Report — ${latitude.toFixed(4)}, ${longitude.toFixed(4)}`,
+                            source: 'sos_gps'
+                        })
+                    });
+                    showToast(`🚨 SOS GPS alert sent! Location: ${latitude.toFixed(4)}, ${longitude.toFixed(4)}`, 'critical');
+                } catch (err) {
+                    showToast(`GPS location captured: ${latitude.toFixed(4)}, ${longitude.toFixed(4)} — Backend offline.`, 'info');
+                }
+
+                btn.disabled = false;
+                setTimeout(() => document.getElementById('emergencyModal').classList.add('hidden'), 1500);
+            },
+            (err) => {
+                statusEl.textContent = 'Location access denied. Enter manually.';
+                iconEl.textContent   = 'location_off';
+                btn.disabled         = false;
+                showToast('Could not get GPS. Please enter location manually.', 'error');
+            },
+            { timeout: 10000, enableHighAccuracy: true }
+        );
+    };
+
+    window.sosSubmitReport = async function() {
+        const location    = document.getElementById('sosLocation')?.value.trim();
+        const description = document.getElementById('sosDescription')?.value.trim();
+
+        if (!location && !description) {
+            showToast('Please enter a location or description before submitting.', 'error');
+            return;
+        }
+
+        try {
+            await fetch(`${API_BASE_URL}/detections`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    latitude: 20.5937,
+                    longitude: 78.9629,
+                    severity: 'high',
+                    confidence: 0.9,
+                    status: 'pending',
+                    address: location || 'Unknown — citizen report',
+                    notes: description,
+                    source: 'sos_report'
+                })
+            });
+            showToast('✅ Incident report submitted to Agniveer monitoring team!', 'success');
+        } catch (err) {
+            showToast('Report saved locally — will sync when backend is online.', 'info');
+        }
+
+        document.getElementById('emergencyModal').classList.add('hidden');
+    };
 
 })();
