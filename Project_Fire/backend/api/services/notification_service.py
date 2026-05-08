@@ -35,10 +35,11 @@ class NotificationService:
             if station.get('phone'):
                 tasks.append(self.send_sms(station['phone'], detection))
         
-        # Send emails to all stations with email
-        for station in nearby_stations:
-            if station.get('email'):
-                tasks.append(self.send_email(station['email'], detection))
+        # Send emails to emergency contacts and admin
+        emergency_emails = os.getenv('EMERGENCY_EMAILS', self.email_user).split(',')
+        for email in emergency_emails:
+            if email.strip():
+                tasks.append(self.send_email(email.strip(), detection))
         
         # Send push notifications
         tasks.append(self.send_push_notification(detection))
@@ -161,6 +162,11 @@ class NotificationService:
             for number in emergency_numbers:
                 if number.strip():
                     await self.send_sms(number.strip(), {**detection, '_verified': True})
+            
+            emergency_emails = os.getenv('EMERGENCY_EMAILS', self.email_user).split(',')
+            for email in emergency_emails:
+                if email.strip():
+                    await self.send_email(email.strip(), {**detection, '_verified': True})
             
             # Broadcast to all users
             await self.send_push_notification({

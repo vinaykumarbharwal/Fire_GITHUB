@@ -841,7 +841,7 @@
         if (window.pollingActive) return;
         window.pollingActive = true;
         console.log('🔄 Tactical Polling Node Initialized');
-        setInterval(loadDetections, 10000); // UI updates every 10s
+        setInterval(loadDetections, 2000); // UI updates every 2s
     }
 
 

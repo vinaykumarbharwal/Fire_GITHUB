@@ -195,7 +195,7 @@
         setInterval(tick, 1000);
     }
 
-    function startPolling() { setInterval(fetchData, 3000); }
+    function startPolling() { setInterval(fetchData, 2000); }
 
     async function fetchData() {
         try {
@@ -394,8 +394,8 @@
         
         // Initial fetch
         await fetchReports();
-        // Poll every 3 seconds
-        setInterval(fetchReports, 3000);
+        // Poll every 2 seconds
+        setInterval(fetchReports, 2000);
     }
 
     function renderCitizenTable(reports) {

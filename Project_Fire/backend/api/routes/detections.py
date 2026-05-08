@@ -35,6 +35,7 @@ from fastapi.security import HTTPAuthorizationCredentials, HTTPBearer
 
 from api.models.detection import DetectionResponse, DetectionUpdate
 from api.routes.auth import get_current_user
+from firebase_admin import firestore
 from api.services.firebase_service import db
 from api.services.geocoding_service import find_nearby_stations, get_location_details
 from api.services.notification_service import NotificationService
