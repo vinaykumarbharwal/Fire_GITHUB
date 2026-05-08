@@ -286,6 +286,65 @@ async def _gather_location_data(latitude: float, longitude: float):
 
 
 # ══════════════════════════════════════════════
+# POST /citizen-report – Public reporting endpoint
+# ══════════════════════════════════════════════
+@router.post("/citizen-report", status_code=status.HTTP_201_CREATED)
+async def submit_citizen_report(
+    latitude: Optional[float] = Form(None),
+    longitude: Optional[float] = Form(None),
+    location: str = Form(...),
+    description: str = Form(""),
+    image: Optional[UploadFile] = File(None)
+):
+    """
+    Public endpoint for citizen fire reports. Bypasses client-side Firestore 
+    permissions to write securely to the citizen_reports collection.
+    Uploads optional photo to Supabase.
+    """
+    try:
+        report_id = str(uuid.uuid4())
+        image_url = None
+
+        if image and image.filename:
+            ext = image.filename.rsplit(".", 1)[-1].lower() if "." in image.filename else "jpg"
+            temp_file = os.path.join(tempfile.gettempdir(), f"citizen_{report_id}.{ext}")
+            
+            with open(temp_file, "wb") as buffer:
+                shutil.copyfileobj(image.file, buffer)
+                
+            supabase_path = f"citizen_reports/{report_id}.{ext}"
+            try:
+                image_url = await supabase_service.upload_image(temp_file, supabase_path)
+            except Exception as exc:
+                logger.error("Supabase upload failed for citizen report %s: %s", report_id, exc)
+            finally:
+                if os.path.exists(temp_file):
+                    os.remove(temp_file)
+
+        report_data = {
+            "id": report_id,
+            "latitude": latitude,
+            "longitude": longitude,
+            "location": location,
+            "description": description,
+            "image_url": image_url,
+            "timestamp": datetime.utcnow().isoformat() + "Z",
+            "status": "new",
+            "source": "citizen_report"
+        }
+
+        db.collection("citizen_reports").document(report_id).set(report_data)
+        
+        return {"status": "success", "report_id": report_id, "message": "Report successfully stored."}
+
+    except Exception as exc:
+        logger.exception("Citizen report submission failed: %s", exc)
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail="Failed to submit citizen report."
+        )
+
+# ══════════════════════════════════════════════
 # GET / – List detections with optional filters
 # ══════════════════════════════════════════════
 @router.get("/", response_model=List[DetectionResponse])

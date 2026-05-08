@@ -1055,34 +1055,31 @@
 
         let saved = false;
 
-        // Save to Firestore citizen_reports collection
         try {
-            if (typeof firebase !== 'undefined' && firebase.apps.length > 0) {
-                await firebase.firestore().collection('citizen_reports').add(report);
+            const formData = new FormData();
+            formData.append('location', report.location);
+            formData.append('description', report.description);
+            if (report.latitude) formData.append('latitude', report.latitude);
+            if (report.longitude) formData.append('longitude', report.longitude);
+
+            const photoInput = document.getElementById('photoUpload');
+            if (photoInput && photoInput.files && photoInput.files[0]) {
+                formData.append('image', photoInput.files[0]);
+            }
+
+            const response = await fetch(`${API_BASE_URL}/detections/citizen-report`, {
+                method: 'POST',
+                body: formData // Note: Content-Type is set automatically by the browser for FormData
+            });
+
+            if (response.ok) {
                 saved = true;
+            } else {
+                throw new Error('Backend responded with an error');
             }
         } catch (err) {
-            console.warn('Firestore save failed:', err);
+            console.error('Failed to submit report via API:', err);
         }
-
-        // Also try backend API
-        try {
-            await fetch(`${API_BASE_URL}/detections`, {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({
-                    latitude:   report.latitude  || 20.5937,
-                    longitude:  report.longitude || 78.9629,
-                    severity:   'medium',
-                    confidence: 0.75,
-                    status:     'pending',
-                    address:    location || 'Citizen Report',
-                    notes:      description,
-                    source:     'citizen_report'
-                })
-            });
-            saved = true;
-        } catch (_) {}
 
         // Reset button
         if (btn) { btn.disabled = false; btn.innerHTML = 'Submit Sighting <span class="material-symbols-outlined">send</span>'; }
@@ -1091,8 +1088,10 @@
             showToast('✅ Sighting submitted!', 'success');
             document.getElementById('reportLocation').value    = '';
             document.getElementById('reportDescription').value = '';
+            const photoInput = document.getElementById('photoUpload');
+            if (photoInput) photoInput.value = '';
         } else {
-            showToast('⚠️ Submitted locally. Will sync when server is online.', 'info');
+            showToast('⚠️ Submission failed. Please try again later.', 'error');
         }
     };
 
