@@ -345,6 +345,29 @@ async def submit_citizen_report(
         )
 
 # ══════════════════════════════════════════════
+# GET /citizen-reports – Fetch public reports
+# ══════════════════════════════════════════════
+@router.get("/citizen-reports")
+async def get_citizen_reports(limit: int = Query(50, ge=1, le=200)):
+    """Retrieve citizen reports securely from the backend."""
+    try:
+        query = db.collection("citizen_reports").order_by(
+            "timestamp", direction=firestore.Query.DESCENDING
+        ).limit(limit)
+        
+        docs = query.stream()
+        reports = []
+        for doc in docs:
+            data = doc.to_dict()
+            data["id"] = doc.id
+            reports.append(data)
+            
+        return reports
+    except Exception as exc:
+        logger.error("Failed to fetch citizen reports: %s", exc)
+        raise HTTPException(status_code=500, detail="Database fetch failed")
+
+# ══════════════════════════════════════════════
 # GET / – List detections with optional filters
 # ══════════════════════════════════════════════
 @router.get("/", response_model=List[DetectionResponse])

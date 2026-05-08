@@ -371,27 +371,31 @@
         } catch(e) { showToast('Failed: ' + e.message, 'error'); }
     };
 
-    function loadCitizenReports() {
-        if (typeof firebase === 'undefined' || firebase.apps.length === 0) {
-            const tbody = document.getElementById('citizenReportTable');
-            if (tbody) tbody.innerHTML = '<tr class="empty-row"><td colspan="6">Firebase not connected — citizen reports unavailable.</td></tr>';
-            return;
-        }
-
-        firebase.firestore().collection('citizen_reports')
-            .orderBy('timestamp', 'desc')
-            .onSnapshot(snapshot => {
-                const reports = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+    async function loadCitizenReports() {
+        const tbody = document.getElementById('citizenReportTable');
+        
+        async function fetchReports() {
+            try {
+                const response = await fetch(`${API_BASE_URL}/detections/citizen-reports`);
+                if (!response.ok) throw new Error('Failed to fetch from backend');
+                
+                const reports = await response.json();
                 renderCitizenTable(reports);
+                
                 const countEl = document.getElementById('stats-citizen');
                 if (countEl) countEl.textContent = reports.length;
-            }, err => {
+            } catch (err) {
                 console.error('Citizen reports error:', err);
-                const tbody = document.getElementById('citizenReportTable');
-                if (tbody) {
-                    tbody.innerHTML = `<tr class="empty-row"><td colspan="6" style="color:#ef4444;">Database Error: ${escHtml(err.message)}</td></tr>`;
+                if (tbody && tbody.innerHTML.includes('Loading')) {
+                    tbody.innerHTML = `<tr class="empty-row"><td colspan="6" style="color:#ef4444;">API Error: ${escHtml(err.message)}</td></tr>`;
                 }
-            });
+            }
+        }
+        
+        // Initial fetch
+        await fetchReports();
+        // Poll every 3 seconds
+        setInterval(fetchReports, 3000);
     }
 
     function renderCitizenTable(reports) {
