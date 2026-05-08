@@ -369,6 +369,40 @@ async def get_citizen_reports(limit: int = Query(50, ge=1, le=200)):
         raise HTTPException(status_code=500, detail="Database fetch failed")
 
 # ══════════════════════════════════════════════
+# PUT /citizen-reports/{report_id}/status – Update public report status
+# ══════════════════════════════════════════════
+@router.put("/citizen-reports/{report_id}/status")
+async def update_citizen_report_status(report_id: str):
+    """Mark a citizen report as reviewed."""
+    try:
+        doc_ref = db.collection("citizen_reports").document(report_id)
+        if not doc_ref.get().exists:
+            raise HTTPException(status_code=404, detail="Report not found")
+            
+        doc_ref.update({"status": "reviewed"})
+        return {"status": "success", "message": "Report marked as reviewed"}
+    except Exception as exc:
+        logger.error("Failed to update citizen report: %s", exc)
+        raise HTTPException(status_code=500, detail="Failed to update report")
+
+# ══════════════════════════════════════════════
+# DELETE /citizen-reports/{report_id} – Delete public report
+# ══════════════════════════════════════════════
+@router.delete("/citizen-reports/{report_id}")
+async def delete_citizen_report(report_id: str):
+    """Delete a citizen report."""
+    try:
+        doc_ref = db.collection("citizen_reports").document(report_id)
+        if not doc_ref.get().exists:
+            raise HTTPException(status_code=404, detail="Report not found")
+            
+        doc_ref.delete()
+        return {"status": "success", "message": "Report deleted successfully"}
+    except Exception as exc:
+        logger.error("Failed to delete citizen report: %s", exc)
+        raise HTTPException(status_code=500, detail="Failed to delete report")
+
+# ══════════════════════════════════════════════
 # GET / – List detections with optional filters
 # ══════════════════════════════════════════════
 @router.get("/", response_model=List[DetectionResponse])

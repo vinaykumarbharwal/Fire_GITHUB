@@ -419,11 +419,17 @@
             const badge = isReviewed
                 ? `<span class="status-badge resolved">Reviewed</span>`
                 : `<span class="status-badge pending">New</span>`;
+            
+            const imageHtml = r.image_url ? 
+                `<div style="margin-top: 8px;"><a href="${r.image_url}" target="_blank"><img src="${r.image_url}" style="max-width: 120px; border-radius: 6px; border: 1px solid rgba(255,255,255,0.1);" alt="Evidence"></a></div>` : '';
 
             return `
             <tr>
               <td><div class="region-name">${escHtml(r.location || 'Unknown')}</div></td>
-              <td><div style="font-size:11px;color:#94a3b8;max-width:280px">${escHtml(r.description || '—')}</div></td>
+              <td>
+                <div style="font-size:11px;color:#94a3b8;max-width:280px">${escHtml(r.description || '—')}</div>
+                ${imageHtml}
+              </td>
               <td><span class="timestamp">${date}</span></td>
               <td>${gps}</td>
               <td>${badge}</td>
@@ -441,10 +447,19 @@
         }).join('');
     }
 
+    window.dismissCitizenReport = async function(docId) {
+        try {
+            const response = await fetch(`${API_BASE_URL}/detections/citizen-reports/${docId}/status`, { method: 'PUT' });
+            if (!response.ok) throw new Error('Failed to update status');
+            showToast('Report marked as reviewed.', 'success');
+        } catch(e) { showToast('Update failed: ' + e.message, 'error'); }
+    };
+
     window.deleteCitizenReport = async function(docId) {
         if (!confirm('Delete this citizen report permanently?')) return;
         try {
-            await firebase.firestore().collection('citizen_reports').doc(docId).delete();
+            const response = await fetch(`${API_BASE_URL}/detections/citizen-reports/${docId}`, { method: 'DELETE' });
+            if (!response.ok) throw new Error('Failed to delete report');
             showToast('Citizen report deleted.', 'success');
         } catch(e) { showToast('Delete failed: ' + e.message, 'error'); }
     };
