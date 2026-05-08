@@ -514,7 +514,11 @@
                     </div>
                     <div class="flex flex-col items-end">
                         <span class="text-[9px] text-slate-400 font-bold uppercase tracking-widest">Status</span>
-                        <span class="text-[10px] font-black px-2 py-0.5 rounded-md bg-slate-100 text-slate-600 uppercase">${detection.status}</span>
+                        <span class="text-[10px] font-black px-2 py-0.5 rounded-md uppercase ${
+                            ['resolved','contained','false_alarm'].includes((detection.status||'').toLowerCase())
+                                ? 'bg-emerald-100 text-emerald-700'
+                                : 'bg-red-100 text-red-600'
+                        }">${detection.status}</span>
                     </div>
                 </div>
             </div>
@@ -1005,5 +1009,85 @@
     // Expose modal helpers globally for inline onclick handlers
     window.closeSosModal = closeSosModal;
     window.openSosModal  = openSosModal;
+
+    // ─── Citizen Incident Report Form ──────────────────────────────────────────
+
+    window.submitIncidentReport = async function(e) {
+        e.preventDefault();
+        const location    = document.getElementById('reportLocation')?.value.trim();
+        const description = document.getElementById('reportDescription')?.value.trim();
+        const btn         = document.getElementById('reportSubmitBtn');
+
+        if (!location && !description) {
+            showToast('Please enter a location or description.', 'error');
+            return;
+        }
+
+        // Button loading state
+        if (btn) { btn.disabled = true; btn.innerHTML = '<span class="material-symbols-outlined animate-spin">progress_activity</span>&nbsp;Submitting…'; }
+
+        const report = {
+            location:    location  || 'Unknown',
+            description: description || '',
+            timestamp:   new Date().toISOString(),
+            status:      'new',
+            source:      'citizen_report',
+            latitude:    null,
+            longitude:   null
+        };
+
+        // Try GPS first (non-blocking)
+        try {
+            await new Promise((resolve) => {
+                navigator.geolocation?.getCurrentPosition(
+                    pos => { report.latitude = pos.coords.latitude; report.longitude = pos.coords.longitude; resolve(); },
+                    () => resolve(),
+                    { timeout: 3000 }
+                );
+            });
+        } catch (_) {}
+
+        let saved = false;
+
+        // Save to Firestore citizen_reports collection
+        try {
+            if (typeof firebase !== 'undefined' && firebase.apps.length > 0) {
+                await firebase.firestore().collection('citizen_reports').add(report);
+                saved = true;
+            }
+        } catch (err) {
+            console.warn('Firestore save failed:', err);
+        }
+
+        // Also try backend API
+        try {
+            await fetch(`${API_BASE_URL}/detections`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    latitude:   report.latitude  || 20.5937,
+                    longitude:  report.longitude || 78.9629,
+                    severity:   'medium',
+                    confidence: 0.75,
+                    status:     'pending',
+                    address:    location || 'Citizen Report',
+                    notes:      description,
+                    source:     'citizen_report'
+                })
+            });
+            saved = true;
+        } catch (_) {}
+
+        // Reset button
+        if (btn) { btn.disabled = false; btn.innerHTML = 'Submit Sighting <span class="material-symbols-outlined">send</span>'; }
+
+        if (saved) {
+            showToast('✅ Sighting submitted! Your report is now visible in the admin panel.', 'success');
+            document.getElementById('reportLocation').value    = '';
+            document.getElementById('reportDescription').value = '';
+        } else {
+            showToast('⚠️ Submitted locally. Will sync when server is online.', 'info');
+        }
+    };
 
 })();

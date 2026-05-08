@@ -1,4 +1,4 @@
-<!DOCTYPE html>
+﻿<!DOCTYPE html>
 <html class="light" lang="en">
 
 <head>
@@ -611,22 +611,22 @@
                 </div>
                 <div
                     class="bg-slate-50 dark:bg-white/5 rounded-[3rem] p-10 border border-slate-100 dark:border-white/10 shadow-xl">
-                    <form id="incidentForm" class="space-y-6">
+                    <form id="incidentReportForm" class="space-y-6" onsubmit="submitIncidentReport(event)">
                         <div class="space-y-2">
                             <label
                                 class="text-[10px] font-black uppercase tracking-widest text-slate-400 dark:text-slate-500 ml-1">Location
                                 Details</label>
-                            <input type="text" placeholder="Region name or City"
+                            <input id="reportLocation" type="text" placeholder="Region name or City"
                                 class="w-full bg-white dark:bg-slate-900 border border-slate-200 dark:border-white/10 px-6 py-4 rounded-2xl text-sm font-bold text-slate-900 dark:text-white focus:ring-2 focus:ring-primary/20 outline-none transition-all placeholder:dark:text-slate-600">
                         </div>
                         <div class="space-y-2">
                             <label
                                 class="text-[10px] font-black uppercase tracking-widest text-slate-400 dark:text-slate-500 ml-1">Observational
                                 Briefings</label>
-                            <textarea placeholder="Describe what you see (e.g., Heavy smoke near North Ridge)" rows="4"
+                            <textarea id="reportDescription" placeholder="Describe what you see (e.g., Heavy smoke near North Ridge)" rows="4"
                                 class="w-full bg-white dark:bg-slate-900 border border-slate-200 dark:border-white/10 px-6 py-4 rounded-2xl text-sm font-bold text-slate-900 dark:text-white focus:ring-2 focus:ring-primary/20 outline-none transition-all resize-none placeholder:dark:text-slate-600"></textarea>
                         </div>
-                        <button type="submit"
+                        <button type="submit" id="reportSubmitBtn"
                             class="w-full bg-primary text-white py-5 rounded-2xl text-lg font-black shadow-xl shadow-primary/30 hover:bg-danger-deep transition-all uppercase tracking-tighter flex items-center justify-center gap-4">
                             Submit Sighting
                             <span class="material-symbols-outlined">send</span>
@@ -839,49 +839,6 @@
                     </div>
                     <span class="material-symbols-outlined text-red-400 group-hover:translate-x-1 transition-transform">arrow_forward</span>
                 </a>
-
-                <!-- Action 2: GPS Pin-drop -->
-                <button id="sosPinBtn" onclick="sosSubmitGPS()" class="w-full flex items-center gap-5 p-5 rounded-2xl border-2 border-orange-100 dark:border-orange-500/20 bg-orange-50 dark:bg-orange-500/10 hover:border-orange-400 hover:bg-orange-100 dark:hover:bg-orange-500/20 transition-all group text-left">
-                    <div class="w-12 h-12 bg-orange-500 rounded-xl flex items-center justify-center shrink-0 group-hover:scale-110 transition-transform shadow-lg shadow-orange-500/30">
-                        <span class="material-symbols-outlined text-white text-2xl" id="sosPinIcon">my_location</span>
-                    </div>
-                    <div class="flex-1">
-                        <p class="text-[11px] font-black uppercase tracking-widest text-orange-500">GPS Alert</p>
-                        <p class="text-base font-black text-slate-900 dark:text-white tracking-tight">Send My Location to Agniveer</p>
-                        <p class="text-[11px] text-slate-500 font-medium mt-0.5" id="sosPinStatus">Broadcasts your coordinates to the monitoring grid</p>
-                    </div>
-                    <span class="material-symbols-outlined text-orange-400 group-hover:translate-x-1 transition-transform">arrow_forward</span>
-                </button>
-
-                <!-- Action 3: Quick Incident Report -->
-                <div class="rounded-2xl border-2 border-slate-100 dark:border-white/10 overflow-hidden">
-                    <button onclick="document.getElementById('sosFormBody').classList.toggle('hidden')" class="w-full flex items-center gap-5 p-5 hover:bg-slate-50 dark:hover:bg-white/5 transition-all group text-left">
-                        <div class="w-12 h-12 bg-slate-800 dark:bg-white/10 rounded-xl flex items-center justify-center shrink-0 group-hover:scale-110 transition-transform">
-                            <span class="material-symbols-outlined text-white text-2xl">edit_note</span>
-                        </div>
-                        <div class="flex-1">
-                            <p class="text-[11px] font-black uppercase tracking-widest text-slate-400">Incident Report</p>
-                            <p class="text-base font-black text-slate-900 dark:text-white tracking-tight">Describe What You See</p>
-                            <p class="text-[11px] text-slate-500 font-medium mt-0.5">Submit details to the Agniveer monitoring team</p>
-                        </div>
-                        <span class="material-symbols-outlined text-slate-400 group-hover:rotate-180 transition-transform">expand_more</span>
-                    </button>
-                    <div id="sosFormBody" class="hidden border-t border-slate-100 dark:border-white/10 p-5 space-y-4 bg-slate-50 dark:bg-white/5">
-                        <div>
-                            <label class="text-[10px] font-black uppercase tracking-widest text-slate-400 ml-1">Location / Region</label>
-                            <input id="sosLocation" type="text" placeholder="e.g. Western Ghats, near Pune" class="mt-1 w-full bg-white dark:bg-slate-900 border border-slate-200 dark:border-white/10 px-4 py-3 rounded-xl text-sm font-bold text-slate-900 dark:text-white focus:ring-2 focus:ring-red-400/30 outline-none placeholder:text-slate-400">
-                        </div>
-                        <div>
-                            <label class="text-[10px] font-black uppercase tracking-widest text-slate-400 ml-1">What are you seeing?</label>
-                            <textarea id="sosDescription" rows="3" placeholder="Describe the fire: size, smoke color, spread direction..." class="mt-1 w-full bg-white dark:bg-slate-900 border border-slate-200 dark:border-white/10 px-4 py-3 rounded-xl text-sm font-bold text-slate-900 dark:text-white focus:ring-2 focus:ring-red-400/30 outline-none resize-none placeholder:text-slate-400"></textarea>
-                        </div>
-                        <div class="flex gap-2">
-                            <button onclick="sosSubmitReport()" class="flex-1 bg-red-500 hover:bg-red-600 text-white py-3 rounded-xl text-[11px] font-black uppercase tracking-widest transition-all flex items-center justify-center gap-2">
-                                <span class="material-symbols-outlined text-sm">send</span> Submit Report
-                            </button>
-                        </div>
-                    </div>
-                </div>
 
             </div>
         </div>

@@ -113,8 +113,10 @@
                 isRealtime = true;
                 updateSyncLabel(true);
                 setupRealtimeListeners();
+                loadCitizenReports(); // ← citizen report listener
             } else {
                 updateSyncLabel(false);
+                loadCitizenReports(); // still show "not connected" message
             }
         } catch (_) {
             updateSyncLabel(false);
@@ -290,5 +292,89 @@
     function escHtml(str) {
         return String(str || '').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
     }
+
+    // ─── Citizen Reports ─────────────────────────────────────────────────────
+
+    window.dismissCitizenReport = async function(docId) {
+        if (!confirm('Mark this citizen report as reviewed?')) return;
+        try {
+            if (typeof firebase !== 'undefined' && firebase.apps.length > 0) {
+                await firebase.firestore().collection('citizen_reports').doc(docId).update({ status: 'reviewed' });
+                showToast('Report marked as reviewed.', 'success');
+            } else {
+                showToast('Firebase not connected.', 'error');
+            }
+        } catch(e) { showToast('Failed: ' + e.message, 'error'); }
+    };
+
+    function loadCitizenReports() {
+        if (typeof firebase === 'undefined' || firebase.apps.length === 0) {
+            const tbody = document.getElementById('citizenReportTable');
+            if (tbody) tbody.innerHTML = '<tr class="empty-row"><td colspan="6">Firebase not connected — citizen reports unavailable.</td></tr>';
+            return;
+        }
+
+        firebase.firestore().collection('citizen_reports')
+            .orderBy('timestamp', 'desc')
+            .onSnapshot(snapshot => {
+                const reports = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+                renderCitizenTable(reports);
+                const countEl = document.getElementById('stats-citizen');
+                if (countEl) countEl.textContent = reports.length;
+            }, err => {
+                console.error('Citizen reports error:', err);
+            });
+    }
+
+    function renderCitizenTable(reports) {
+        const tbody = document.getElementById('citizenReportTable');
+        if (!tbody) return;
+
+        if (reports.length === 0) {
+            tbody.innerHTML = '<tr class="empty-row"><td colspan="6">No citizen reports yet.</td></tr>';
+            return;
+        }
+
+        tbody.innerHTML = reports.map(r => {
+            const date = r.timestamp ? new Date(r.timestamp).toLocaleString() : 'N/A';
+            const gps = r.latitude && r.longitude
+                ? `<a href="https://maps.google.com/?q=${r.latitude},${r.longitude}" target="_blank"
+                       style="color:#3B82F6;font-size:10px;font-family:monospace;text-decoration:none;">
+                       📍 ${parseFloat(r.latitude).toFixed(4)}, ${parseFloat(r.longitude).toFixed(4)}</a>`
+                : `<span style="color:#475569;font-size:10px;">No GPS</span>`;
+
+            const isReviewed = (r.status || '') === 'reviewed';
+            const badge = isReviewed
+                ? `<span class="status-badge resolved">Reviewed</span>`
+                : `<span class="status-badge pending">New</span>`;
+
+            return `
+            <tr>
+              <td><div class="region-name">${escHtml(r.location || 'Unknown')}</div></td>
+              <td><div style="font-size:11px;color:#94a3b8;max-width:280px">${escHtml(r.description || '—')}</div></td>
+              <td><span class="timestamp">${date}</span></td>
+              <td>${gps}</td>
+              <td>${badge}</td>
+              <td>
+                <div class="actions">
+                  ${!isReviewed ? `<button class="action-btn btn-resolve" onclick="dismissCitizenReport('${r.id}')">
+                    <span class="material-symbols-outlined">check_circle</span> Mark Reviewed
+                  </button>` : ''}
+                  <button class="action-btn btn-delete" onclick="deleteCitizenReport('${r.id}')">
+                    <span class="material-symbols-outlined">delete</span> Delete
+                  </button>
+                </div>
+              </td>
+            </tr>`;
+        }).join('');
+    }
+
+    window.deleteCitizenReport = async function(docId) {
+        if (!confirm('Delete this citizen report permanently?')) return;
+        try {
+            await firebase.firestore().collection('citizen_reports').doc(docId).delete();
+            showToast('Citizen report deleted.', 'success');
+        } catch(e) { showToast('Delete failed: ' + e.message, 'error'); }
+    };
 
 })();

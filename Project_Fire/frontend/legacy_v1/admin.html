@@ -435,7 +435,7 @@
     <div class="content">
 
       <!-- STATS -->
-      <div class="stats-grid">
+        <div class="stats-grid">
         <div class="stat-card">
           <p class="stat-label">Active Fires</p>
           <div class="stat-row">
@@ -458,10 +458,10 @@
           </div>
         </div>
         <div class="stat-card">
-          <p class="stat-label">System Health</p>
+          <p class="stat-label">Citizen Reports</p>
           <div class="stat-row">
-            <div class="stat-value green">OSS</div>
-            <div class="stat-icon emerald2"><span class="material-symbols-outlined">dns</span></div>
+            <div class="stat-value" id="stats-citizen" style="color:#F59E0B">—</div>
+            <div class="stat-icon" style="color:#F59E0B"><span class="material-symbols-outlined">campaign</span></div>
           </div>
         </div>
       </div>
@@ -497,6 +497,35 @@
               <tr class="empty-row">
                 <td colspan="6">Loading incident data…&nbsp;<span class="loading-spinner"></span></td>
               </tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+
+      </div>
+
+      <!-- CITIZEN REPORTS TABLE -->
+      <div class="table-card" style="margin-top:24px">
+        <div class="table-header">
+          <div class="table-title">
+            <h3 style="color:#F59E0B">🔔 Reported Fire Incidents</h3>
+            <p>Citizen sightings submitted via the public dashboard</p>
+          </div>
+        </div>
+        <div class="table-scroll">
+          <table>
+            <thead>
+              <tr>
+                <th>Location</th>
+                <th>Description</th>
+                <th>Submitted At</th>
+                <th>GPS</th>
+                <th>Status</th>
+                <th>Actions</th>
+              </tr>
+            </thead>
+            <tbody id="citizenReportTable">
+              <tr class="empty-row"><td colspan="6">Loading citizen reports…&nbsp;<span class="loading-spinner"></span></td></tr>
             </tbody>
           </table>
         </div>
