@@ -56,12 +56,12 @@ class _CameraScreenState extends State<CameraScreen> {
       return null;
     }
 
-    for (int attempt = 1; attempt <= 2; attempt++) {
+    for (int attempt = 1; attempt <= 3; attempt++) {
       try {
         final loc = await _location
             .getLocation()
-            .timeout(Duration(seconds: attempt == 1 ? 8 : 15));
-        if (loc.latitude != null && loc.longitude != null) {
+            .timeout(Duration(seconds: attempt == 1 ? 10 : 20));
+        if (loc.latitude != null && loc.longitude != null && loc.latitude != 0.0) {
           return loc;
         }
       } catch (e) {

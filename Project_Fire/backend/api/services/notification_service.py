@@ -1,6 +1,5 @@
 import asyncio
 from typing import List, Dict
-from twilio.rest import Client
 import smtplib
 from email.mime.text import MIMEText
 from email.mime.multipart import MIMEMultipart
@@ -13,13 +12,6 @@ load_dotenv()
 
 class NotificationService:
     def __init__(self):
-        # Twilio for SMS
-        self.twilio_client = Client(
-            os.getenv('TWILIO_ACCOUNT_SID'),
-            os.getenv('TWILIO_AUTH_TOKEN')
-        )
-        self.twilio_phone = os.getenv('TWILIO_PHONE_NUMBER')
-        
         # Email settings
         self.smtp_server = os.getenv('SMTP_SERVER', 'smtp.gmail.com')
         self.smtp_port = int(os.getenv('SMTP_PORT', '587'))
@@ -27,13 +19,8 @@ class NotificationService:
         self.email_password = os.getenv('EMAIL_PASSWORD')
     
     async def send_alerts(self, detection: Dict, nearby_stations: List[Dict]):
-        """Send alerts through multiple channels"""
+        """Send alerts through multiple channels (Email and Push)"""
         tasks = []
-        
-        # Send SMS to top 3 nearest stations
-        for station in nearby_stations[:3]:
-            if station.get('phone'):
-                tasks.append(self.send_sms(station['phone'], detection))
         
         # Send emails to emergency contacts and admin
         emergency_emails = os.getenv('EMERGENCY_EMAILS', self.email_user).split(',')
@@ -51,27 +38,6 @@ class NotificationService:
         for i, result in enumerate(results):
             if isinstance(result, Exception):
                 print(f"Notification {i} failed: {result}")
-    
-    async def send_sms(self, to: str, detection: Dict):
-        """Send SMS alert using Twilio"""
-        try:
-            message = self._format_sms_message(detection)
-            
-            # Truncate if too long (Twilio limit is 1600 chars)
-            if len(message) > 1600:
-                message = message[:1597] + "..."
-            
-            self.twilio_client.messages.create(
-                body=message,
-                from_=self.twilio_phone,
-                to=to
-            )
-            print(f"✅ SMS sent to {to}")
-            return True
-            
-        except Exception as e:
-            print(f"❌ SMS failed to {to}: {e}")
-            return False
     
     async def send_email(self, to: str, detection: Dict):
         """Send email alert with HTML formatting"""
@@ -157,12 +123,6 @@ class NotificationService:
     async def send_verified_alert(self, detection: Dict):
         """Send additional alerts when fire is verified"""
         try:
-            # Send to emergency services
-            emergency_numbers = os.getenv('EMERGENCY_PHONE_NUMBERS', '').split(',')
-            for number in emergency_numbers:
-                if number.strip():
-                    await self.send_sms(number.strip(), {**detection, '_verified': True})
-            
             emergency_emails = os.getenv('EMERGENCY_EMAILS', self.email_user).split(',')
             for email in emergency_emails:
                 if email.strip():
@@ -177,25 +137,7 @@ class NotificationService:
         except Exception as e:
             print(f"Error sending verified alert: {e}")
     
-    def _format_sms_message(self, detection: Dict, verified: bool = False) -> str:
-        """Format SMS alert message"""
-        prefix = "🚨 VERIFIED " if verified else "🔥 "
-        image_str = f"🖼️ Image: {detection['image_url']}" if detection.get('image_url') else "🖼️ Image: No image available"
-        
-        lines = [
-            f"{prefix}WILDFIRE DETECTED!",
-            f"Severity: {detection['severity'].upper()}",
-            f"Location: {detection.get('address', 'Unknown')}",
-            f"Confidence: {detection['confidence']*100:.0f}%",
-            f"Time: {detection['timestamp'].strftime('%H:%M %d/%m/%Y') if isinstance(detection['timestamp'], datetime) else str(detection['timestamp'])}",
-            "",
-            f"📍 Map: https://maps.google.com/?q={detection['latitude']},{detection['longitude']}",
-            image_str,
-            "",
-            "🚒 Fire department has been notified."
-        ]
-        
-        return "\n".join(lines)
+
     
     def _format_text_email(self, detection: Dict) -> str:
         """Format plain text email"""

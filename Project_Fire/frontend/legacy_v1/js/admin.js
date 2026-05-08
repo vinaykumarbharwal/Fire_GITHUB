@@ -284,12 +284,14 @@
             }
 
             // GPS display
-            const gps = (d.latitude && d.longitude && (d.latitude !== 0 || d.longitude !== 0))
-                ? `<a href="https://maps.google.com/?q=${d.latitude},${d.longitude}" target="_blank"
+            const latVal = parseFloat(d.latitude);
+            const lngVal = parseFloat(d.longitude);
+            const gps = (latVal && lngVal && latVal !== 0 && lngVal !== 0)
+                ? `<a href="https://maps.google.com/?q=${latVal},${lngVal}" target="_blank"
                        style="color:#3B82F6;font-size:10px;font-family:monospace;text-decoration:none;" title="Open in Google Maps">
-                       📍 ${parseFloat(d.latitude).toFixed(4)}, ${parseFloat(d.longitude).toFixed(4)}
+                       📍 ${latVal.toFixed(4)}, ${lngVal.toFixed(4)}
                    </a>`
-                : `<span style="color:#475569;font-size:10px;">No GPS</span>`;
+                : `<span style="color:#475569;font-size:10px;">No GPS Signal</span>`;
 
             const status = (d.status || 'pending').toLowerCase();
             const statusBadge = `<span class="status-badge ${status}">${status}</span>`;
@@ -409,11 +411,13 @@
 
         tbody.innerHTML = reports.map(r => {
             const date = r.timestamp ? new Date(r.timestamp).toLocaleString() : 'N/A';
-            const gps = r.latitude && r.longitude
-                ? `<a href="https://maps.google.com/?q=${r.latitude},${r.longitude}" target="_blank"
+            const latVal = parseFloat(r.latitude);
+            const lngVal = parseFloat(r.longitude);
+            const gps = (latVal && lngVal && latVal !== 0 && lngVal !== 0)
+                ? `<a href="https://maps.google.com/?q=${latVal},${lngVal}" target="_blank"
                        style="color:#3B82F6;font-size:10px;font-family:monospace;text-decoration:none;">
-                       📍 ${parseFloat(r.latitude).toFixed(4)}, ${parseFloat(r.longitude).toFixed(4)}</a>`
-                : `<span style="color:#475569;font-size:10px;">No GPS</span>`;
+                       📍 ${latVal.toFixed(4)}, ${lngVal.toFixed(4)}</a>`
+                : `<span style="color:#475569;font-size:10px;">No Location Data</span>`;
 
             const status = r.status || 'new';
             let badge = '';

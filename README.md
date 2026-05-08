@@ -192,7 +192,6 @@ Configure the environment variables in `Project_Fire/backend/.env` for local dev
 | `FIREBASE_PROJECT_ID` | Your Google Cloud Project ID. |
 | `FIREBASE_CREDENTIALS_JSON` | Firebase service-account JSON for Admin SDK access. |
 | `SUPABASE_URL` | Your Supabase infrastructure URL for storage. |
-| `TWILIO_ACCOUNT_SID` | Twilio SID for SMS notifications. |
 | `EMAIL_USER` | SMTP username for email alerts. |
 | `EMAIL_PASSWORD` | App-specific password for SMTP authentication. |
 | `EMERGENCY_EMAILS` | Comma-separated list of authority recipients. |
