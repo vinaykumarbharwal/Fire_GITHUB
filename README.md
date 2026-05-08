@@ -10,7 +10,6 @@
     <a href="https://fastapi.tiangolo.com/"><img src="https://img.shields.io/badge/FastAPI-0.100%2B-05998B?style=for-the-badge&logo=fastapi&logoColor=white" alt="FastAPI" /></a>
     <a href="https://flutter.dev/"><img src="https://img.shields.io/badge/Flutter-3.x-02569B?style=for-the-badge&logo=flutter&logoColor=white" alt="Flutter" /></a>
     <a href="https://firebase.google.com/"><img src="https://img.shields.io/badge/Firebase-Admin-FFCA28?style=for-the-badge&logo=firebase&logoColor=black" alt="Firebase" /></a>
-    <a href="https://www.docker.com/"><img src="https://img.shields.io/badge/Docker-Ready-2496ED?style=for-the-badge&logo=docker&logoColor=white" alt="Docker" /></a>
   </p>
 </div>
 
@@ -42,15 +41,16 @@ Agniveer is built upon a distributed microservices architecture designed for low
 
 ```mermaid
 graph TD
-    subgraph "Edge Tier (Mobile)"
+    subgraph "Edge Tier (Mobile & Web)"
         A[📱 Flutter Capture App]
-        A -->|Image Capture + GPS| TFL[(Flutter Mobile App)]
-        A -->|Location| GPS[(GPS API)]
+        W[🌐 Citizen Web Portal]
+        A -->|Image Capture + GPS| GPS[(GPS API)]
+        W -->|Public Incident Reports| B
     end
 
     subgraph "API Gateway (Backend)"
         B(⚙️ FastAPI Service)
-        B -->|Auth| AUTH{JWT / OAuth2}
+        B -->|Auth & RBAC| AUTH{JWT}
     end
 
     subgraph "Persistence Tier (Cloud)"
@@ -60,19 +60,19 @@ graph TD
     end
 
     subgraph "Automation & Dispatch"
-        E[🌐 Live Telemetry Dashboard]
-        F[[🤖 n8n Automation Engine]]
+        E[🌐 Live Tactical Dashboard]
+        F[[⚡ Automated Dispatch Engine]]
         G(((Alert Channels)))
     end
 
     %% Data Flows
     A == "POST /api/inference/detect" ==> B
     B -- "Geo-encodes" --> MAPS
-    B -- "Saves Image" --> D
+    B -- "Saves Evidence" --> D
     B -- "Persists Metadata" --> C
     
-    C -. "Trigger" .-> F
-    C == "Sync" ==> E
+    C -. "Trigger on Verified" .-> F
+    C == "Sync (2s Polling)" ==> E
     
     F -- "Dispatches" --> G
     G --> SMS[Twilio SMS]
@@ -87,23 +87,23 @@ The Flutter app captures a frame and sends it to the backend with GPS coordinate
 Powered by **FastAPI** running atop `gunicorn` + `uvicorn`, the backend ingests image data, runs ONNX inference, decodes spatial coordinates, and reverse-geocodes incidents via the Google Maps API.
 
 ### 🔹 3. Data Persistence Tier
-- **Firestore:** Manages unstructured fast-moving data with instantaneous cross-client synchronization.
-- **Supabase/Cloud Storage:** High-resolution evidentiary images are piped into optimized object storage.
+- **Firestore:** Manages unstructured fast-moving data with instantaneous cross-client synchronization and 2-second tactical polling.
+- **Supabase:** High-resolution evidentiary images are piped into optimized object buckets with secure backend-only mutation logic.
 
-### 🔹 4. Event-Driven Automation Engine
-When a detection is verified, it triggers an automation engine (n8n). This detaches notification logic from the REST API, ensuring complex multi-channel retries across SMS, Email, and Push notifications without slowing down the core API.
+### 🔹 4. Event-Driven Alert Dispatcher
+When a detection is verified by an administrator, it triggers a custom notification engine. This detaches alert logic from the core processing loop, ensuring high-reliability multi-channel delivery across SMS, Email, and Push notifications via Twilio and SMTP.
 
 ---
 
 ## ✨ Key Features
 
 - **📱 Mobile Capture Flow**: Flutter app sends image + GPS coordinates to the backend.
+- **🤝 Citizen Verification Workflow**: Public reporting portal where citizens submit sightings; admins then verify, solve, or flag reports as fake.
 - **📍 Real-Time Geocoding**: Automatically tags exact latitudes/longitudes and reverse maps the closest fire authorities.
 - **✉️ Redundant Alert Orchestration**: Parallel SMS (Twilio), Email (SMTP), and Push (FCM) notifications.
-- **🌐 Geospatial Dashboard**: Live surveillance dashboard featuring real-time Firebase listeners and interactive mapping.
-- **🧠 ONNX Inference**: Single backend model source at `Project_Fire/backend/api/models/fire_model.onnx`.
-- **🔐 Enterprise Auth Security**: Role-Based Access Control (RBAC) driven by secure JWT verification.
-- **🐳 Dockerized Topology**: Unified `docker-compose` for rapid, one-command deployment.
+- **🌐 Tactical Command Dashboard**: High-frequency (2s) real-time surveillance featuring unified verified incident feeds.
+- **🧠 ONNX Edge Inference**: Optimized backend model source at `Project_Fire/backend/api/models/fire_model.onnx`.
+- **🔐 Secure API Orchestration**: Role-Based Access Control (RBAC) ensuring all sensitive mutations bypass client-side rules.
 
 ---
 
@@ -111,11 +111,11 @@ When a detection is verified, it triggers an automation engine (n8n). This detac
 
 ```text
 Project_Fire/
-├── automation/                 # n8n workflows & automation setup
-├── backend/                    # FastAPI source code & business logic
+├── automation/                 # Custom notification workflows & alert scripts
+├── backend/                    # FastAPI source code & core AI logic
 │   └── api/                    # Core API implementation
-├── frontend/                   # Real-time Web surveillance dashboard
-│   └── legacy_v1/              # Legacy version of the dashboard
+├── frontend/                   # Tactical Web dashboards (Public & Admin)
+│   └── legacy_v1/              # Production-ready dashboard source
 ├── mobile_app/                 # Flutter mobile application
 │   └── flutter_app/            # Main Flutter project
 └── scripts/                    # Maintenance & utility scripts
@@ -190,11 +190,14 @@ Configure the environment variables in `Project_Fire/backend/.env` for local dev
 | Variable | Description |
 | :--- | :--- |
 | `FIREBASE_PROJECT_ID` | Your Google Cloud Project ID. |
-| `FIREBASE_CREDENTIALS_JSON` | Firebase service-account JSON for Render/backend. |
-| `SUPABASE_URL` | Your Supabase infrastructure URL. |
+| `FIREBASE_CREDENTIALS_JSON` | Firebase service-account JSON for Admin SDK access. |
+| `SUPABASE_URL` | Your Supabase infrastructure URL for storage. |
 | `TWILIO_ACCOUNT_SID` | Twilio SID for SMS notifications. |
+| `EMAIL_USER` | SMTP username for email alerts. |
+| `EMAIL_PASSWORD` | App-specific password for SMTP authentication. |
+| `EMERGENCY_EMAILS` | Comma-separated list of authority recipients. |
+| `GOOGLE_MAPS_API_KEY` | Key for Geocoding and reverse mapping. |
 | `JWT_SECRET_KEY` | Secret key for JWT signing. |
-| `GOOGLE_MAPS_API_KEY` | Key for Geocoding services. |
 
 ---
 
