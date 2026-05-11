@@ -143,7 +143,13 @@
 
         photoInput?.addEventListener('change', (e) => {
             if (e.target.files.length > 0) {
-                showToast(`Photo "${e.target.files[0].name}" uploaded. Analyzing for fire signatures...`, 'success');
+                const fileName = e.target.files[0].name;
+                showToast(`Photo "${fileName}" uploaded. Analyzing for fire signatures...`, 'success');
+                const nameDisplay = document.getElementById('uploadedFileName');
+                if (nameDisplay) {
+                    nameDisplay.textContent = `Selected: ${fileName}`;
+                    nameDisplay.classList.remove('hidden');
+                }
             }
         });
 
@@ -154,10 +160,16 @@
                 navigator.geolocation.getCurrentPosition(
                     (position) => {
                         const { latitude, longitude } = position.coords;
-                        const locationEl = document.getElementById('incidentLocation');
+                        const coordsStr = `${latitude.toFixed(4)}° N, ${longitude.toFixed(4)}° E`;
+                        const locationEl = document.getElementById('reportLocation');
                         if (locationEl) {
-                            locationEl.value = `${latitude.toFixed(4)}, ${longitude.toFixed(4)} (Automatic GPS)`;
+                            locationEl.value = `${coordsStr} (Automatic GPS)`;
                             showToast('Location pinpointed with high precision.', 'success');
+                        }
+                        const gpsDisplay = document.getElementById('gpsCoordinates');
+                        if (gpsDisplay) {
+                            gpsDisplay.textContent = coordsStr;
+                            gpsDisplay.classList.remove('hidden');
                         }
                     },
                     (error) => {
@@ -1163,6 +1175,18 @@
             document.getElementById('reportDescription').value = '';
             const photoInput = document.getElementById('photoUpload');
             if (photoInput) photoInput.value = '';
+
+            // Clear display indicators
+            const nameDisplay = document.getElementById('uploadedFileName');
+            if (nameDisplay) {
+                nameDisplay.textContent = '';
+                nameDisplay.classList.add('hidden');
+            }
+            const gpsDisplay = document.getElementById('gpsCoordinates');
+            if (gpsDisplay) {
+                gpsDisplay.textContent = '';
+                gpsDisplay.classList.add('hidden');
+            }
         } else {
             showToast('⚠️ Submission failed. Please try again later.', 'error');
         }
