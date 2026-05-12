@@ -106,41 +106,21 @@ class _DashboardScreenState extends State<DashboardScreen> {
         children: [
           Row(
             children: [
-              Stack(
-                children: [
-                  Container(
-                    width: 48,
-                    height: 48,
-                    decoration: BoxDecoration(
-                      shape: BoxShape.circle,
-                      border: Border.all(color: kPrimaryColor.withOpacity(0.6), width: 2),
-                      image: DecorationImage(
-                        image: NetworkImage("https://ui-avatars.com/api/?name=Alex&background=f48c25&color=fff"),
-                        fit: BoxFit.cover,
-                      ),
-                    ),
-                  ),
-                  Positioned(
-                    bottom: 0,
-                    right: 0,
-                    child: Container(
-                      width: 12,
-                      height: 12,
-                      decoration: BoxDecoration(
-                        color: Colors.green[500],
-                        shape: BoxShape.circle,
-                        border: Border.all(color: Colors.white, width: 2),
-                      ),
-                    ),
-                  ),
-                ],
+              Container(
+                width: 48,
+                height: 48,
+                decoration: BoxDecoration(
+                  shape: BoxShape.circle,
+                  color: kPrimaryColor.withOpacity(0.2),
+                ),
+                child: Icon(Icons.person, color: kPrimaryColor, size: 24),
               ),
               SizedBox(width: 12),
               Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   Text(
-                    'GOOD MORNING',
+                    'Wildfire',
                     style: TextStyle(
                       fontSize: 10,
                       fontWeight: FontWeight.w600,
@@ -149,7 +129,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
                     ),
                   ),
                   Text(
-                    'Hello, Alex',
+                    'Detection System',
                     style: TextStyle(
                       fontSize: 20,
                       fontWeight: FontWeight.bold,
@@ -261,8 +241,9 @@ class _DashboardScreenState extends State<DashboardScreen> {
                         Column(
                           crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
-                            Text('Scanning Region', style: TextStyle(fontSize: 11, fontWeight: FontWeight.w500, color: Colors.blueGrey[600])),
-                            Text('Sierra Nevada North', style: TextStyle(fontSize: 14, fontWeight: FontWeight.bold, color: kTextDark)),
+                            Text('Active Zone', style: TextStyle(fontSize: 11, fontWeight: FontWeight.w500, color: Colors.blueGrey[600])),
+                            Text('Real-time Monitoring', style: TextStyle(fontSize: 14, fontWeight: FontWeight.bold, color: kTextDark)),
+                            Text('Agniveer Camera', style: TextStyle(fontSize: 14, fontWeight: FontWeight.bold, color: kTextDark)),
                           ],
                         ),
                       ],
@@ -380,12 +361,9 @@ class _DashboardScreenState extends State<DashboardScreen> {
       borderRadius: 0,
       padding: EdgeInsets.only(top: 16, bottom: 32, left: 24, right: 24),
       child: Row(
-        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+        mainAxisAlignment: MainAxisAlignment.spaceEvenly,
         children: [
-          _buildNavItem(Icons.grid_view, 'DASHBOARD', true, () {}),
-          _buildNavItem(Icons.map_outlined, 'EXPLORER', false, () {}),
-          
-          // Center Big Primary Button
+          // Camera Button
           GestureDetector(
             onTap: () => Navigator.pushNamed(context, '/camera'),
             child: Container(
@@ -401,8 +379,8 @@ class _DashboardScreenState extends State<DashboardScreen> {
             ),
           ),
           
+          // History Button
           _buildNavItem(Icons.history, 'HISTORY', false, () => Navigator.pushNamed(context, '/history')),
-          _buildNavItem(Icons.settings_outlined, 'SYSTEM', false, () {}),
         ],
       ),
     );

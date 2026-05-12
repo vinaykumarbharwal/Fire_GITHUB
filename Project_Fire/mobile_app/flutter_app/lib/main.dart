@@ -1,10 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'screens/camera_screen.dart';
-import 'screens/login_screen.dart';
 import 'screens/dashboard_screen.dart';
 import 'screens/history_screen.dart';
 import 'screens/landing_screen.dart';
+import 'screens/get_started_screen.dart';
 import 'services/detection_service.dart';
 import 'services/api_service.dart';
 import 'providers/dashboard_provider.dart';
@@ -31,8 +31,8 @@ class MyApp extends StatelessWidget {
         initialRoute: '/landing',
         routes: {
           '/landing': (context) => LandingScreen(),
+          '/get-started': (context) => GetStartedScreen(),
           '/camera': (context) => CameraScreen(),
-          '/login': (context) => LoginScreen(),
           '/dashboard': (context) => DashboardScreen(),
           '/history': (context) => HistoryScreen(),
         },

@@ -40,7 +40,7 @@ class LandingScreen extends StatelessWidget {
             const SizedBox(height: 40),
             ElevatedButton(
               onPressed: () {
-                Navigator.pushNamed(context, '/login');
+                Navigator.pushNamed(context, '/get-started');
               },
               style: ElevatedButton.styleFrom(
                 backgroundColor: Colors.orange,

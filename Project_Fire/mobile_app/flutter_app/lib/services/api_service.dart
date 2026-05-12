@@ -4,13 +4,11 @@ import 'package:http/http.dart' as http;
 import 'package:flutter/material.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:location/location.dart';
-import 'package:shared_preferences/shared_preferences.dart';
 
 import '../utils/constants.dart';
 
 class ApiService extends ChangeNotifier {
   static const String baseUrl = AppConstants.baseUrl;
-  String? _authToken;
   
   Future<Map<String, dynamic>> reportDetection({
     required Map<String, dynamic> detection,
@@ -57,11 +55,6 @@ class ApiService extends ChangeNotifier {
       request.fields['longitude'] = currentLocation.longitude.toString();
       request.fields['confidence'] = detection['confidence'].toString();
       request.fields['timestamp'] = detection['timestamp'];
-
-      // Add auth token if available
-      if (_authToken != null) {
-        request.headers['Authorization'] = 'Bearer $_authToken';
-      }
 
       // Send request
       var streamedResponse = await request.send();
@@ -112,48 +105,7 @@ class ApiService extends ChangeNotifier {
     }
   }
 
-  Future<bool> login(String email, String password) async {
-    try {
-      var uri = Uri.parse('$baseUrl/auth/token');
-      var response = await http.post(
-        uri,
-        headers: {'Content-Type': 'application/x-www-form-urlencoded'},
-        body: {
-          'username': email,
-          'password': password,
-        },
-      );
-      
-      if (response.statusCode == 200) {
-        var data = json.decode(response.body);
-        _authToken = data['access_token'];
-        
-        // Save token
-        SharedPreferences prefs = await SharedPreferences.getInstance();
-        await prefs.setString('auth_token', _authToken!);
-        
-        notifyListeners();
-        return true;
-      }
-      return false;
-    } catch (e) {
-      print('Login error: $e');
-      return false;
-    }
-  }
 
-  Future<void> logout() async {
-    _authToken = null;
-    SharedPreferences prefs = await SharedPreferences.getInstance();
-    await prefs.remove('auth_token');
-    notifyListeners();
-  }
-
-  Future<void> loadToken() async {
-    SharedPreferences prefs = await SharedPreferences.getInstance();
-    _authToken = prefs.getString('auth_token');
-    notifyListeners();
-  }
 
   Future<Map<String, dynamic>> detectFireCloud(XFile imageFile, {double lat = 0.0, double lng = 0.0}) async {
     try {
@@ -173,10 +125,6 @@ class ApiService extends ChangeNotifier {
           filename: imageFile.name,
         ),
       );
-
-      if (_authToken != null) {
-        request.headers['Authorization'] = 'Bearer $_authToken';
-      }
 
       var streamedResponse = await request.send();
       var response = await http.Response.fromStream(streamedResponse);
