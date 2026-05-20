@@ -185,10 +185,17 @@ class _CameraScreenState extends State<CameraScreen> {
             content: Text('🔥 Fire Detected! Pinned to Global Map.'),
             backgroundColor: kPrimary,
           ));
+        } else {
+          final confidence = (((result['confidence'] ?? 0) as num) * 100).toStringAsFixed(1);
+          ScaffoldMessenger.of(context).showSnackBar(SnackBar(
+            content: Text('🔥 Fire detected! Confidence: $confidence%'),
+            backgroundColor: kPrimary,
+          ));
         }
       } else if (!silent) {
+        final confidence = (((result['confidence'] ?? 0) as num) * 100).toStringAsFixed(1);
         ScaffoldMessenger.of(context).showSnackBar(SnackBar(
-          content: Text('✅ Clean Frame: No fire detected.'),
+          content: Text('✅ Clean Frame: No fire detected. Confidence: $confidence%'),
           backgroundColor: Colors.green,
         ));
       }

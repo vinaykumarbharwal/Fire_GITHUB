@@ -31,7 +31,7 @@ class NotificationService:
         
         # Send emails to emergency contacts and admin
         _emails = os.getenv('EMERGENCY_EMAILS')
-        if _emails:
+        if _emails and _emails.strip():
             emergency_emails = [e.strip() for e in _emails.split(',') if e.strip()]
         elif self.email_user:
             emergency_emails = [self.email_user]

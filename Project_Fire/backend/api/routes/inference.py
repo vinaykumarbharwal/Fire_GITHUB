@@ -144,6 +144,7 @@ async def detect_fire(
 
         confidence: float = float(results.get("confidence", 0.0))
         severity: str = results.get("severity") or _calculate_severity(confidence)
+        confidence_pct = f"{confidence * 100:.1f}%"
 
         return {
             "status": "success",
@@ -151,14 +152,15 @@ async def detect_fire(
             "detected": detected,
             "confidence": confidence,
             "severity": severity,
-            "message": "Fire detected" if detected else "No fire detected",
+            "message": f"Fire detected with confidence {confidence_pct}." if detected else f"No fire detected. Confidence: {confidence_pct}.",
             "timestamp": results.get("timestamp", ""),
             "filename": image.filename,
             "location": {
                 "latitude": lat,
                 "longitude": lng,
                 "address": address if detected else None
-            }
+            },
+            "threshold": results.get("threshold", 0.0)
         }
 
     except Exception as e:
