@@ -1,4 +1,6 @@
 import asyncio
+import logging
+import time
 from typing import List, Dict
 import smtplib
 from email.mime.text import MIMEText
@@ -10,6 +12,9 @@ from datetime import datetime
 
 load_dotenv()
 
+# Module logger
+logger = logging.getLogger(__name__)
+
 class NotificationService:
     def __init__(self):
         # Email settings
@@ -17,16 +22,24 @@ class NotificationService:
         self.smtp_port = int(os.getenv('SMTP_PORT', '587'))
         self.email_user = os.getenv('EMAIL_USER')
         self.email_password = os.getenv('EMAIL_PASSWORD')
+        self.smtp_debug = os.getenv('SMTP_DEBUG', 'False').lower() == 'true'
+        self.smtp_max_retries = int(os.getenv('SMTP_MAX_RETRIES', '3'))
     
     async def send_alerts(self, detection: Dict, nearby_stations: List[Dict]):
         """Send alerts through multiple channels (Email and Push)"""
         tasks = []
         
         # Send emails to emergency contacts and admin
-        emergency_emails = os.getenv('EMERGENCY_EMAILS', self.email_user).split(',')
+        _emails = os.getenv('EMERGENCY_EMAILS')
+        if _emails:
+            emergency_emails = [e.strip() for e in _emails.split(',') if e.strip()]
+        elif self.email_user:
+            emergency_emails = [self.email_user]
+        else:
+            emergency_emails = []
+
         for email in emergency_emails:
-            if email.strip():
-                tasks.append(self.send_email(email.strip(), detection))
+            tasks.append(self.send_email(email, detection))
         
         # Send push notifications
         tasks.append(self.send_push_notification(detection))
@@ -41,33 +54,75 @@ class NotificationService:
     
     async def send_email(self, to: str, detection: Dict):
         """Send email alert with HTML formatting"""
-        try:
-            msg = MIMEMultipart('alternative')
-            msg['From'] = self.email_user
-            msg['To'] = to
-            msg['Subject'] = f"🚨 WILDFIRE ALERT - {detection['severity'].upper()}"
-            
-            # Create both plain text and HTML versions
-            text_body = self._format_text_email(detection)
-            html_body = self._format_html_email(detection)
-            
-            # Attach parts
-            msg.attach(MIMEText(text_body, 'plain'))
-            msg.attach(MIMEText(html_body, 'html'))
-            
-            # Send email
-            server = smtplib.SMTP(self.smtp_server, self.smtp_port)
-            server.starttls()
-            server.login(self.email_user, self.email_password)
-            server.send_message(msg)
-            server.quit()
-            
-            print(f"✅ Email sent to {to}")
-            return True
-            
-        except Exception as e:
-            print(f"❌ Email failed to {to}: {e}")
+        if not self.email_user or not self.email_password:
+            logger.error("Skipping email to %s: EMAIL_USER or EMAIL_PASSWORD not configured", to)
             return False
+
+        # Build message
+        msg = MIMEMultipart('alternative')
+        msg['From'] = self.email_user
+        msg['To'] = to
+        msg['Subject'] = f"🚨 WILDFIRE ALERT - {detection['severity'].upper()}"
+
+        # Create both plain text and HTML versions
+        text_body = self._format_text_email(detection)
+        html_body = self._format_html_email(detection)
+
+        # Attach parts
+        msg.attach(MIMEText(text_body, 'plain'))
+        msg.attach(MIMEText(html_body, 'html'))
+
+        # Perform blocking SMTP send in a thread to avoid blocking the event loop
+        try:
+            result = await asyncio.to_thread(self._send_email_sync, msg)
+            if result:
+                logger.info("Email sent to %s", to)
+            else:
+                logger.error("Email failed to %s", to)
+            return result
+        except Exception as e:
+            logger.exception("Email failed to %s: %s", to, e)
+            return False
+
+    def _send_email_sync(self, msg: MIMEMultipart) -> bool:
+        """Blocking SMTP send with STARTTLS and SSL fallback."""
+        # Retry loop for transient errors
+        last_exc = None
+        for attempt in range(1, max(1, self.smtp_max_retries) + 1):
+            try:
+                # Try plain SMTP with STARTTLS first
+                try:
+                    server = smtplib.SMTP(self.smtp_server, self.smtp_port, timeout=15)
+                    server.ehlo()
+                    if self.smtp_debug:
+                        server.set_debuglevel(1)
+                    server.starttls()
+                    server.ehlo()
+                    server.login(self.email_user, self.email_password)
+                except Exception:
+                    # Fallback to SMTP_SSL (some providers require SSL on connect)
+                    server = smtplib.SMTP_SSL(self.smtp_server, self.smtp_port, timeout=15)
+                    if self.smtp_debug:
+                        server.set_debuglevel(1)
+                    server.ehlo()
+                    server.login(self.email_user, self.email_password)
+
+                server.send_message(msg)
+                try:
+                    server.quit()
+                except Exception:
+                    server.close()
+                return True
+
+            except Exception as e:
+                last_exc = e
+                logger.warning("SMTP attempt %d failed: %s", attempt, e)
+                # Exponential backoff before retrying
+                if attempt < self.smtp_max_retries:
+                    time.sleep(2 ** attempt)
+
+        logger.error("All SMTP attempts failed: %s", last_exc)
+        return False
     
     async def send_push_notification(self, detection: Dict):
         """Send push notification via FCM HTTP v1 using Firebase Admin SDK"""

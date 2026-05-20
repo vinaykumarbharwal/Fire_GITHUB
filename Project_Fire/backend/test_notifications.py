@@ -25,12 +25,40 @@ def test_email():
     
     try:
         print(f"Connecting to {smtp_server}:{smtp_port} as {email_user}...")
-        server = smtplib.SMTP(smtp_server, smtp_port)
+        server = None
         # server.set_debuglevel(1) # Uncomment for verbose logs
-        server.starttls()
-        server.login(email_user, email_password)
+
+        server = smtplib.SMTP(smtp_server, smtp_port, timeout=15)
+        server.ehlo()
+        try:
+            server.starttls()
+            server.ehlo()
+            server.login(email_user, email_password)
+        except Exception:
+            # STARTTLS not supported or failed. If server uses SSL port, try SMTP_SSL,
+            # otherwise fall back to plaintext send (useful for local debug servers).
+            try:
+                if smtp_port == 465:
+                    server.close()
+                    server = smtplib.SMTP_SSL(smtp_server, smtp_port, timeout=15)
+                    server.ehlo()
+                    server.login(email_user, email_password)
+                else:
+                    # Plain send without TLS (only for local/non-production testing)
+                    pass
+            except Exception:
+                # ignore and proceed to send (may fail)
+                pass
+
         server.send_message(msg)
-        server.quit()
+        try:
+            server.quit()
+        except Exception:
+            try:
+                server.close()
+            except Exception:
+                pass
+
         print(f"✅ Email sent successfully to {msg['To']}.")
     except Exception as e:
         print(f"❌ Email failed: {e}")
