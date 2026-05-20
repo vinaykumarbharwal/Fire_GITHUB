@@ -108,9 +108,19 @@ class _CameraScreenState extends State<CameraScreen> {
   }
 
   Future<void> _pickAndAnalyze() async {
-    final XFile? pickedFile = await _picker.pickImage(source: ImageSource.gallery);
-    if (pickedFile != null) {
-      _runAnalysis(pickedFile);
+    try {
+      final XFile? pickedFile = await _picker.pickImage(source: ImageSource.gallery);
+      if (pickedFile == null) {
+        return;
+      }
+      await _runAnalysis(pickedFile);
+    } catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(SnackBar(
+          content: Text('⚠️ Gallery access failed: ${e.toString()}'),
+          backgroundColor: Colors.orange,
+        ));
+      }
     }
   }
 
@@ -186,9 +196,12 @@ class _CameraScreenState extends State<CameraScreen> {
 
       final String responseMessage = result['message']?.toString() ?? '';
       final String responseText = responseMessage.toLowerCase();
+      final bool messageIndicatesFire = responseText.contains('fire') &&
+          !responseText.contains('no fire') &&
+          !responseText.contains('no fire detected');
       final bool fireDetected = _parseBool(result['fire_detected']) ||
           _parseBool(result['detected']) ||
-          responseText.contains('fire detected');
+          messageIndicatesFire;
       final double confidenceValue = _parseConfidence(result['confidence']);
       final String confidence = (confidenceValue * 100).toStringAsFixed(1);
 

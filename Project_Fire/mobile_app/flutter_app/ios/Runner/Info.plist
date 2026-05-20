@@ -26,6 +26,10 @@
 	<string>$(FLUTTER_BUILD_NUMBER)</string>
 	<key>LSRequiresIPhoneOS</key>
 	<true/>
+	<key>NSCameraUsageDescription</key>
+	<string>Camera access is required to capture wildfire images for detection.</string>
+	<key>NSPhotoLibraryUsageDescription</key>
+	<string>Photo library access is required to upload images for wildfire detection.</string>
 	<key>NSLocationWhenInUseUsageDescription</key>
 	<string>Location access is needed to tag wildfire detections with GPS coordinates.</string>
 	<key>NSLocationAlwaysAndWhenInUseUsageDescription</key>
