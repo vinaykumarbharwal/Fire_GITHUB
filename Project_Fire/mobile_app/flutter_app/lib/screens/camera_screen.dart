@@ -171,14 +171,23 @@ class _CameraScreenState extends State<CameraScreen> {
         lng: lng,
       );
 
-      if (result['status'] == 'error' || result.containsKey('error')) {
+      final bool fireDetected = (result['fire_detected'] == true || result['detected'] == true);
+      final String confidence = (((result['confidence'] ?? 0) is num
+              ? (result['confidence'] as num)
+              : num.tryParse(result['confidence']?.toString() ?? '0') ?? 0) * 100)
+          .toStringAsFixed(1);
+      final String responseMessage = result['message']?.toString() ?? '';
+
+      if (result['status'] == 'error' || result['error'] != null) {
         if (!silent) {
           ScaffoldMessenger.of(context).showSnackBar(SnackBar(
-            content: Text('❌ Error: Could not connect to Backend. Check Wi-Fi / IP.'),
+            content: Text(responseMessage.isNotEmpty
+                ? '❌ $responseMessage'
+                : '❌ Error: Could not connect to Backend. Check Wi-Fi / IP.'),
             backgroundColor: Colors.red,
           ));
         }
-      } else if (result['fire_detected'] == true) {
+      } else if (fireDetected) {
         _showFireDialog(result, xFile.path);
         if (silent) {
           ScaffoldMessenger.of(context).showSnackBar(SnackBar(
@@ -186,14 +195,12 @@ class _CameraScreenState extends State<CameraScreen> {
             backgroundColor: kPrimary,
           ));
         } else {
-          final confidence = (((result['confidence'] ?? 0) as num) * 100).toStringAsFixed(1);
           ScaffoldMessenger.of(context).showSnackBar(SnackBar(
             content: Text('🔥 Fire detected! Confidence: $confidence%'),
             backgroundColor: kPrimary,
           ));
         }
       } else if (!silent) {
-        final confidence = (((result['confidence'] ?? 0) as num) * 100).toStringAsFixed(1);
         ScaffoldMessenger.of(context).showSnackBar(SnackBar(
           content: Text('✅ Clean Frame: No fire detected. Confidence: $confidence%'),
           backgroundColor: Colors.green,
@@ -212,6 +219,12 @@ class _CameraScreenState extends State<CameraScreen> {
   }
 
   void _showFireDialog(Map<String, dynamic> result, String imagePath) {
+    final String confidence = (((result['confidence'] ?? 0) is num
+            ? (result['confidence'] as num)
+            : num.tryParse(result['confidence']?.toString() ?? '0') ?? 0) * 100)
+        .toStringAsFixed(1);
+    final String message = result['message']?.toString() ?? 'Fire detected with high confidence.';
+
     showDialog(
       context: context,
       barrierDismissible: false,
@@ -227,7 +240,9 @@ class _CameraScreenState extends State<CameraScreen> {
                 : Image.file(File(imagePath), height: 180),
             ),
             SizedBox(height: 10),
-            Text('Confidence: ${(((result['confidence'] ?? 0) as num) * 100).toStringAsFixed(1)}%'),
+            Text(message, style: TextStyle(fontWeight: FontWeight.bold)),
+            SizedBox(height: 6),
+            Text('Confidence: $confidence%'),
             Text('Pinned to Global Dashboard Map.', style: TextStyle(fontSize: 10, color: Colors.grey)),
           ],
         ),
