@@ -1,6 +1,5 @@
 import 'dart:io';
 import 'dart:async';
-import 'dart:typed_data';
 import 'package:flutter/material.dart';
 import 'package:flutter/foundation.dart' show kIsWeb;
 import 'package:camera/camera.dart';
@@ -9,7 +8,6 @@ import 'package:image_picker/image_picker.dart';
 import 'package:location/location.dart';
 import '../services/api_service.dart';
 import '../services/detection_service.dart';
-import '../utils/constants.dart';
 
 const kBackgroundDark = Color(0xFF0D1117);
 const kPrimary = Color(0xFFFF4C4C);
@@ -138,6 +136,20 @@ class _CameraScreenState extends State<CameraScreen> {
     _runAnalysis(image, silent: silent);
   }
 
+  bool _parseBool(dynamic value) {
+    if (value == null) return false;
+    if (value is bool) return value;
+    if (value is num) return value != 0;
+    final text = value.toString().toLowerCase().trim();
+    return text == 'true' || text == '1' || text == 'yes';
+  }
+
+  double _parseConfidence(dynamic value) {
+    if (value == null) return 0.0;
+    if (value is num) return value.toDouble();
+    return double.tryParse(value.toString()) ?? 0.0;
+  }
+
   Future<void> _runAnalysis(XFile xFile, {bool silent = false}) async {
     setState(() { _isProcessing = true; });
     try {
@@ -148,6 +160,7 @@ class _CameraScreenState extends State<CameraScreen> {
         print("📍 GPS: ${loc?.latitude}, ${loc?.longitude}");
       }
 
+      if (!mounted) return;
       final apiService = Provider.of<ApiService>(context, listen: false);
       final detectionService = Provider.of<DetectionService>(context, listen: false);
 
@@ -171,12 +184,13 @@ class _CameraScreenState extends State<CameraScreen> {
         lng: lng,
       );
 
-      final bool fireDetected = (result['fire_detected'] == true || result['detected'] == true);
-      final String confidence = (((result['confidence'] ?? 0) is num
-              ? (result['confidence'] as num)
-              : num.tryParse(result['confidence']?.toString() ?? '0') ?? 0) * 100)
-          .toStringAsFixed(1);
       final String responseMessage = result['message']?.toString() ?? '';
+      final String responseText = responseMessage.toLowerCase();
+      final bool fireDetected = _parseBool(result['fire_detected']) ||
+          _parseBool(result['detected']) ||
+          responseText.contains('fire detected');
+      final double confidenceValue = _parseConfidence(result['confidence']);
+      final String confidence = (confidenceValue * 100).toStringAsFixed(1);
 
       if (result['status'] == 'error' || result['error'] != null) {
         if (!silent) {
