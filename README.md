@@ -446,5 +446,5 @@ Agniveer includes automated workflow configuration at `Project_Fire/automation/w
 
 ---
 <div align="center">
-  <p><strong>Agniveer Emergency Surveillance • Sovereign Wildfire Defence Infrastructure • 2026</strong></p>
+  <p><strong>Agniveer Emergency Surveillance • Sovereign Wildfire Defence Infrastructure • 2026 (Central University Of Himachal Pradesh)</strong></p>
 </div>
