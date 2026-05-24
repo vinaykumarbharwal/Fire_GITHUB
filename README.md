@@ -47,7 +47,7 @@ graph TD
     subgraph "API Core (FastAPI Gateway)"
         API["⚙️ FastAPI Core Service"]
         AUTH["🔒 Bearer Security (JWT)"]
-        ONNX["🧠 ONNX YOLOv8 Inference Engine"]
+        ONNX["🧠 ONNX YOLO26 Inference Engine"]
     end
 
     %% Cloud Storage & DB
@@ -92,7 +92,7 @@ graph TD
 ### Core Architecture Layers
 
 1. **Edge Surveillance & Collection:** Citizen and surveillance teams run a **Flutter cross-platform application** to capture high-definition photographs and query precise hardware GPS coordinates (`latitude`, `longitude`). A lightweight web portal allows public-facing citizen submissions without authentication.
-2. **API & Model Execution Gateway:** Built with **FastAPI** hosted behind high-performance `gunicorn` + `uvicorn` worker nodes. It processes binary payloads, passes flattened image arrays into an optimized **ONNX YOLOv8 Deep Learning Model** to detect smoke/fire signatures, and validates client security tokens.
+2. **API & Model Execution Gateway:** Built with **FastAPI** hosted behind high-performance `gunicorn` + `uvicorn` worker nodes. It processes binary payloads, passes flattened image arrays into an optimized **ONNX YOLO26 Deep Learning Model** to detect smoke/fire signatures, and validates client security tokens.
 3. **Sovereign Persistence Cloud:** 
    - **Firestore:** Manages unstructured fast-moving real-time database documents. Detections transition dynamically through state lifecycles (`pending` ──► `verified` ──► `contained` / `false_alarm` ──► `resolved`).
    - **Supabase Storage:** Evidentiary images are safely transferred into custom public storage buckets, bypassing local storage constraints and avoiding heavy database bloat.
@@ -127,7 +127,7 @@ Wildfire_Detection/
 │   │       ├── models/
 │   │       │   ├── check.py             # Streamlit-based Web UI model inspector
 │   │       │   ├── detection.py         # PyDantic models for schema enforcement
-│   │       │   └── fire_model.onnx      # Pre-trained YOLOv8 Wildfire ONNX weight
+│   │       │   └── fire_model.onnx      # Pre-trained YOLO26 Wildfire ONNX weight
 │   │       ├── routes/                  # Controller endpoints
 │   │       │   ├── auth.py              # Identity administration & token management
 │   │       │   ├── detections.py        # Main incident endpoints (reporting & search)
@@ -138,7 +138,7 @@ Wildfire_Detection/
 │   │           ├── geocoding_service.py # Spatial computation & station decoders
 │   │           ├── llm_service.py       # Gemini / Groq tactical analysis agent
 │   │           ├── notification_service.py # Core SMTP / FCM / n8n dispatch mechanics
-│   │           ├── onnx_inference.py    # YOLOv8 pre-processor & tensor evaluator
+│   │           ├── onnx_inference.py    # YOLO26 pre-processor & tensor evaluator
 │   │           ├── redis_service.py     # Performance caching wrapper
 │   │           ├── stats_service.py     # Real-time telemetry aggregator
 │   │           ├── supabase_service.py  # Supabase object storage pipeline
@@ -357,7 +357,7 @@ All backend endpoints are prefixed with `/api`. Open `http://localhost:8000/api/
 ```
 
 ### 🔹 1. ONNX Inference Service (`onnx_inference.py`)
-Rather than relying on resource-intensive frameworks (like PyTorch) in production, Agniveer loads pre-trained **YOLOv8 weights** converted to **Open Neural Network Exchange (ONNX)** format.
+Rather than relying on resource-intensive frameworks (like PyTorch) in production, Agniveer loads pre-trained **YOLO26 weights** converted to **Open Neural Network Exchange (ONNX)** format.
 - **Image Preprocessing:** Incoming files are normalized to a `[0.0 - 1.0]` scale, resized to exactly `640x640` pixels, transposed from standard Height-Width-Channel (HWC) to Channel-Height-Width (CHW), and wrapped in a batch dimension: `[1, 3, 640, 640]`.
 - **Tensor Output Parsing:** The engine processes the feed and evaluates output predictions shaped as `[1, 300, 6]`. Each bounding prediction decodes as `[x_center, y_center, width, height, confidence_score, class_id]`.
 - **Self-Healing Mock System:** If the model weights are not found, the service switches to a safe **mock fallback mode**, generating validation responses to keep the core server active.
@@ -421,7 +421,7 @@ Agniveer includes automated workflow configuration at `Project_Fire/automation/w
   ```
 
 ### 🚨 Problem: Supposedly "Fake" or "Mock" detections are occurring
-- **Cause:** The system cannot locate the YOLOv8 weight file `fire_model.onnx` at `backend/api/models/`.
+- **Cause:** The system cannot locate the YOLO26 weight file `fire_model.onnx` at `backend/api/models/`.
 - **Solution:** Check that the 38.9MB file `fire_model.onnx` exists in that folder. If it is missing, download it and place it in the folder to enable live predictions.
 
 ### 🚨 Problem: CORS connection blocks communication between dashboard and local backend

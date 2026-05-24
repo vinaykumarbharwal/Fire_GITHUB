@@ -37,7 +37,7 @@ class OnnxInferenceService:
         """Prepare image for the model"""
         image = Image.open(io.BytesIO(image_bytes)).convert('RGB')
         
-        # Determine model input size (usually 640x640 for YOLO)
+        # Determine model input size (usually 640x640 for YOLO26)
         width, height = (640, 640)
         if self.input_shape and isinstance(self.input_shape[2], int):
             height, width = self.input_shape[2], self.input_shape[3]
