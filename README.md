@@ -2,7 +2,7 @@
   <img src="https://img.icons8.com/isometric/512/fire-element.png" width="128" height="128" />
   <h1>🔥 Agniveer — Wildfire Detection & Emergency Response Platform</h1>
   <p>
-    <strong>A Sovereign, Enterprise-Grade Real-Time Wildfire Detection, AI Edge-Inference, and Tactical Emergency Dispatch Orchestration System</strong>
+    <strong>A Sovereign, Enterprise-Grade Real-Time Wildfire Detection, AI Edge-Inference and Tactical Emergency Dispatch Orchestration System</strong>
   </p>
 
   <p>
